@@ -1,0 +1,1 @@
+This is the project for OPIM 319 - Spring 2015, taught by Professor Steven O. Kimbrough. It is written in NetLogo.
