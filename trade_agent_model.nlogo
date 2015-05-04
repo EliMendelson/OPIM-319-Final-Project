@@ -49,9 +49,9 @@ patches-own[ my-sentiment
              news-sensitivity 
              ;; Sensitivity that the traders have to the news qualitative meaning.
              
-             fundamentalists-counter
-             imitators-counter
-             stubborns-counter
+             smart-counter
+             typical-counter
+             risky-counter
              optimists-counter
              pessimists-counter
              ;; Allows the counting of the different type of traders.
@@ -126,16 +126,20 @@ patches-own[ my-sentiment
 ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
  to setup
-  ca
+  ;; (for this model to work with NetLogo's new plotting features,
+  ;; __clear-all-and-reset-ticks should be replaced with clear-all at
+  ;; the beginning of your setup procedure and reset-ticks at the end
+  ;; of the procedure.)
+  __clear-all-and-reset-ticks
   ;; It creates "fundamentalists" (white), "imitators" (green, still to be differentiated) and "stubborns" (red).
   ask patches
-  [ifelse (fundamentalists + imitators) > 100 
-  [user-message "The sum between fundamentalists and imitators must be below or equal to 100!!!"
+  [ifelse (smart + typical) > 100 
+  [user-message "The sum between smart and typical agents must be below or equal to 100!!!"
    stop]
   [set random-number random-float 100
-  ifelse random-number <= fundamentalists
+  ifelse random-number <= smart
   [set pcolor white]
-  [ifelse (fundamentalists < random-number) and (random-number <= (fundamentalists + imitators))
+  [ifelse (smart < random-number) and (random-number <= (smart + typical))
   [set pcolor green]
   [set pcolor red]]]]
     
@@ -148,22 +152,22 @@ patches-own[ my-sentiment
   ;; It shapes the "imitators"
   ask patches with [pcolor = green]
   [set number-of-shares 1 
-  set opinion-vol sigma + random-int-or-float 0.1
-  set news-sensitivity (random-int-or-float max-news-sensitivity)
-  set propensity-to-sentiment-contagion-base (random-int-or-float max-propensity-to-sentiment-contagion-base)
+  set opinion-vol sigma + random-float 0.1
+  set news-sensitivity (random-float max-news-sensitivity)
+  set propensity-to-sentiment-contagion-base (random-float max-propensity-to-sentiment-contagion-base)
   set propensity-to-sentiment-contagion propensity-to-sentiment-contagion-base
-  set propensity-to-imitation random-int-or-float max-propensity-to-imitation
-  set propensity-to-decision random-int-or-float max-propensity-to-decision
-  set imitators-counter 1]    
+  set propensity-to-imitation random-float max-propensity-to-imitation
+  set propensity-to-decision random-float max-propensity-to-decision
+  set typical-counter 1]    
   ;; It shapes the "fundamentalists"
   ask patches with [pcolor = white]
   [set number-of-shares 1 
   set behavior-vol max-behavior-vol
-  set fundamentalists-counter 1]
+  set smart-counter 1]
   ;; It shapes the "stubborns"
   ask patches with [pcolor = red]
   [set number-of-shares 1
-  set stubborns-counter 1]
+  set risky-counter 1]
   
   end
 
@@ -173,14 +177,14 @@ patches-own[ my-sentiment
   set time time + 1
   old-number
   news-arrival
-  imitators-decision
-  stubborns-decision
-  fundamentalists-decision
+  typical-decision
+  risky-decision
+  smart-decision
   balance-and-liquidity-adjustment
   market-clearing  
   fail-or-survive
   update-market-sentiment
-  modify-categories
+  ;modify-categories
   compute-indicator-volatility
   do-plot
  end
@@ -216,16 +220,16 @@ patches-own[ my-sentiment
  ;; Whether the "imitators" are optimist and buy the share, depends on the four elements you can find here. If the sum of them is positive the "imitators" are optimist.  
  
    
-  to imitators-decision
+  to typical-decision
   ask patches
   [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
   [ifelse all-or-just-neighbors?
-  [set my-total (propensity-to-sentiment-contagion * sum values-from patches [my-sentiment] +
-  propensity-to-imitation * sum values-from patches [my-convinction] + propensity-to-decision * sum values-from patches [my-decision] +
+  [set my-total (propensity-to-sentiment-contagion * sum [my-sentiment] of patches +
+  propensity-to-imitation * sum [my-convinction] of patches + propensity-to-decision * sum [my-decision] of patches +
   news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol)]
-  [set my-total (sum values-from neighbors [ propensity-to-sentiment-contagion * my-sentiment +
+  [set my-total (sum [ propensity-to-sentiment-contagion * my-sentiment +
   propensity-to-imitation * my-convinction + propensity-to-decision * my-decision +
-  news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol ] ) ]]]
+  news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol ] of neighbors ) ]]]
   ask patches
   [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
     [ifelse (my-total > 1)
@@ -274,7 +278,7 @@ patches-own[ my-sentiment
  ;; The "fundamentalist" buy the share if they think it is understimated, otherwise they sell. 
  ;
  
- to fundamentalists-decision
+ to smart-decision
   ask patches with [pcolor = white] 
   [ifelse (present-value > log-price) 
   [set my-convinction 1
@@ -289,7 +293,7 @@ patches-own[ my-sentiment
  ;; The "stubborn" buy or sell the share randomly. 
  ;
  
- to stubborns-decision
+ to risky-decision
    ask patches with [pcolor = red]
    [ifelse (random-float 1) >= .5
    [set my-decision 1
@@ -322,9 +326,9 @@ patches-own[ my-sentiment
    ;; The denominator is the number of agents.
    set return-denominator count patches with [pcolor != yellow]
    ;; The numerator is the difference between sellers and buyers.
-   set return-numerator1 sum values-from patches [my-convinction] 
-   set return-numerator2 sum values-from patches [my-sentiment]
-   set return-numerator3 sum values-from patches [my-decision]
+   set return-numerator1 sum [my-convinction] of patches 
+   set return-numerator2 sum [my-sentiment] of patches
+   set return-numerator3 sum [my-decision] of patches
    set return-numerator (return-numerator1 + return-numerator2 + return-numerator3)
    ;; The return modifies the price of the share.
    ask patches
@@ -400,15 +404,15 @@ patches-own[ my-sentiment
 
  set number-of-yellow count patches with [pcolor = yellow]
  
- set average-portfolio-value (sum values-from patches [portfolio-value]) / (count patches with [pcolor != yellow] + .0000000000000000001)
+ set average-portfolio-value (sum [portfolio-value] of patches) / (count patches with [pcolor != yellow] + .0000000000000000001)
  ;; We need to do that because, if every agent has failed, the program returns a division-by-zero error.   
- set min-portfolio-value min values-from patches [portfolio-value]
- set max-portfolio-value max values-from patches [portfolio-value]
+ set min-portfolio-value min [portfolio-value] of patches
+ set max-portfolio-value max [portfolio-value] of patches
  
-  set average-liquidity (sum values-from patches [liquidity]) / (count patches with [pcolor != yellow] + .0000000000000000001)
+  set average-liquidity (sum [liquidity] of patches) / (count patches with [pcolor != yellow] + .0000000000000000001)
  ;; We need to do that because, if every agent has failed, the program returns a division-by-zero error.   
- set min-liquidity min values-from patches [liquidity]
- set max-liquidity max values-from patches [liquidity]
+ set min-liquidity min [liquidity] of patches
+ set max-liquidity max [liquidity] of patches
  end
 
  
@@ -437,47 +441,47 @@ patches-own[ my-sentiment
  ;; If many colleagues are optimist or pessimist, the "fundamentalist" can change their type and become "imitators" 
  ;; Randomly the "imitators" become "fundamentalist".
  
- to modify-categories
+ ;to modify-categories
   ;; It trasforms some "imitators" in "fundamentalist". 
-  ask patches 
-    [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-  [if (random-float 3000) < new-fundamentalists
-  [set pcolor white
-  set behavior-vol max-behavior-vol
-  set fundamentalists-counter 1]]]
-  ;; Here the opposite happens
-  ask patches with [pcolor = white]
-  [set number-of-optimists nsum optimists-counter
-  set number-of-pessimists nsum pessimists-counter]
-  ask patches with [pcolor = white]
-  [if (number-of-pessimists) > behavior-vol
-  [change-type1]]
-  ask patches with [pcolor = white]
-  [if (number-of-optimists) > behavior-vol
-  [change-type2]]
- end
+ ; ask patches 
+ ;   [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
+ ; [if (random-float 3000) < new-fundamentalists
+ ; [set pcolor white
+ ; set behavior-vol max-behavior-vol
+ ; set smart-counter 1]]]
+ ; ;; Here the opposite happens
+ ; ask patches with [pcolor = white]
+ ; [set number-of-optimists sum [optimists-counter] of neighbors
+ ; set number-of-pessimists sum [pessimists-counter] of neighbors]
+ ; ask patches with [pcolor = white]
+ ; [if (number-of-pessimists) > behavior-vol
+ ; [change-type1]]
+ ; ask patches with [pcolor = white]
+ ; [if (number-of-optimists) > behavior-vol
+ ; [change-type2]]
+ ;end
    
     to change-type1 ;; The "fundamentalist" become pessimistic.
     ask patches with [pcolor = white]
     [if (random-float 100) < change-probability
     [set pcolor black]]
-    set opinion-vol (sigma + random-int-or-float 0.1)
-    set news-sensitivity (random-int-or-float max-news-sensitivity)
-    set propensity-to-sentiment-contagion (random-int-or-float max-propensity-to-sentiment-contagion-base)
-    set imitators-counter 1
+    set opinion-vol (sigma + random-float 0.1)
+    set news-sensitivity (random-float max-news-sensitivity)
+    set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
+    set typical-counter 1
     set pessimists-counter 1
-    set fundamentalists-counter 0
+    set smart-counter 0
    end
    to change-type2 ;; The "fundamentalist" become optimistic.
     ask patches with [pcolor = white]
     [if (random-float 100) < change-probability
     [set pcolor blue + 3]]
-    set opinion-vol (sigma + random-int-or-float 0.1)
-    set news-sensitivity (random-int-or-float max-news-sensitivity)
-    set propensity-to-sentiment-contagion (random-int-or-float max-propensity-to-sentiment-contagion-base)
-    set imitators-counter 1
+    set opinion-vol (sigma + random-float 0.1)
+    set news-sensitivity (random-float max-news-sensitivity)
+    set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
+    set typical-counter 1
     set optimists-counter 1
-    set fundamentalists-counter 0
+    set smart-counter 0
    end
 
  
@@ -529,7 +533,6 @@ patches-own[ my-sentiment
   end
 
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 386
@@ -552,14 +555,11 @@ GRAPHICS-WINDOW
 35
 -23
 23
-
-CC-WINDOW
-5
-822
-968
-917
-Command Center
 0
+0
+1
+ticks
+30.0
 
 BUTTON
 248
@@ -572,8 +572,11 @@ T
 1
 T
 OBSERVER
-T
 NIL
+NIL
+NIL
+NIL
+1
 
 BUTTON
 190
@@ -586,8 +589,11 @@ NIL
 1
 T
 OBSERVER
-T
 NIL
+NIL
+NIL
+NIL
+1
 
 BUTTON
 308
@@ -600,62 +606,70 @@ NIL
 1
 T
 OBSERVER
-T
 NIL
+NIL
+NIL
+NIL
+1
 
 MONITOR
 197
 181
 262
-230
+226
 NIL
 price
 6
 1
+11
 
 MONITOR
 262
 181
 371
-230
+226
 NIL
 present-value
 2
 1
+11
 
 MONITOR
 262
 230
 371
-279
+275
 NIL
 news-qualitative-meaning
 0
 1
+11
 
 MONITOR
 197
 230
 262
-279
+275
 NIL
 return
 2
 1
+11
 
 SLIDER
 7
 174
 185
 207
-fundamentalists
-fundamentalists
+smart
+smart
 0
 100
-43
+33
 1
 1
 NIL
+HORIZONTAL
 
 SLIDER
 284
@@ -670,6 +684,7 @@ sigma
 0.0010
 1
 NIL
+HORIZONTAL
 
 SLIDER
 2
@@ -684,6 +699,7 @@ max-news-sensitivity
 0.01
 1
 NIL
+HORIZONTAL
 
 SLIDER
 2
@@ -698,6 +714,7 @@ max-propensity-to-sentiment-contagion-base
 0.01
 1
 NIL
+HORIZONTAL
 
 SLIDER
 2
@@ -712,6 +729,7 @@ max-propensity-to-imitation
 0.01
 1
 NIL
+HORIZONTAL
 
 SLIDER
 8
@@ -726,6 +744,7 @@ max-behavior-vol
 1
 1
 NIL
+HORIZONTAL
 
 SLIDER
 192
@@ -740,6 +759,7 @@ epsilon
 0.01
 1
 NIL
+HORIZONTAL
 
 SLIDER
 7
@@ -754,6 +774,7 @@ new-fundamentalists
 1
 1
 NIL
+HORIZONTAL
 
 SLIDER
 8
@@ -768,6 +789,7 @@ change-probability
 1
 1
 NIL
+HORIZONTAL
 
 PLOT
 5
@@ -783,8 +805,9 @@ price
 10.0
 true
 false
+"" ""
 PENS
-"price" 1.0 0 -13345367 true
+"price" 1.0 0 -13345367 true "" ""
 
 PLOT
 4
@@ -800,8 +823,9 @@ return
 0.1
 true
 false
+"" ""
 PENS
-"return" 1.0 0 -955883 true
+"return" 1.0 0 -955883 true "" ""
 
 PLOT
 372
@@ -817,8 +841,9 @@ indicator-volatility
 1.5
 true
 false
+"" ""
 PENS
-"indicator-volatility" 1.0 0 -8630108 true
+"indicator-volatility" 1.0 0 -8630108 true "" ""
 
 PLOT
 372
@@ -834,22 +859,24 @@ price-%variation
 1.0
 true
 false
+"" ""
 PENS
-"price-%variation" 1.0 0 -5825686 true
+"price-%variation" 1.0 0 -5825686 true "" ""
 
 SLIDER
 7
 207
 186
 240
-imitators
-imitators
+typical
+typical
 0
 100
-45
+33
 1
 1
 NIL
+HORIZONTAL
 
 SWITCH
 194
@@ -858,7 +885,7 @@ SWITCH
 176
 weak-change?
 weak-change?
-1
+0
 1
 -1000
 
@@ -880,7 +907,7 @@ SWITCH
 112
 all-or-just-neighbors?
 all-or-just-neighbors?
-1
+0
 1
 -1000
 
@@ -888,71 +915,78 @@ MONITOR
 760
 439
 855
-488
+484
 NIL
 average-price\n
 3
 1
+11
 
 MONITOR
 862
 438
 959
-487
+483
 NIL
 average-return
 3
 1
+11
 
 MONITOR
 406
 281
 463
-330
+326
 NIL
 time
 3
 1
+11
 
 MONITOR
 757
 338
 854
-387
+383
 NIL
 min-price
 3
 1
+11
 
 MONITOR
 759
 387
 854
-436
+432
 NIL
 max-price
 3
 1
+11
 
 MONITOR
 861
 338
 958
-387
+383
 NIL
 min-return
 3
 1
+11
 
 MONITOR
 861
 388
 959
-437
+433
 NIL
 max-return
 3
 1
+11
 
 SLIDER
 8
@@ -967,6 +1001,7 @@ endowment
 10
 1
 NIL
+HORIZONTAL
 
 SLIDER
 192
@@ -981,56 +1016,62 @@ maximum-debt
 10
 1
 NIL
+HORIZONTAL
 
 MONITOR
 478
 282
 540
-331
+327
 NIL
 log-price
 6
 1
+11
 
 MONITOR
 549
 282
 606
-331
+327
 failed
 number-of-yellow
 3
 1
+11
 
 MONITOR
 401
 694
 521
-743
+739
 NIL
 max-portfolio-value
 3
 1
+11
 
 MONITOR
 401
 748
 544
-797
+793
 NIL
 average-portfolio-value
 3
 1
+11
 
 MONITOR
 402
 641
 518
-690
+686
 NIL
 min-portfolio-value\n
 3
 1
+11
 
 PLOT
 3
@@ -1046,10 +1087,11 @@ NIL
 10.0
 true
 false
+"" ""
 PENS
-"min-portfolio-value" 1.0 0 -16777216 true
-"average-portfolio-value" 1.0 0 -2674135 true
-"max-portfolio-value" 1.0 0 -11221820 true
+"min-portfolio-value" 1.0 0 -16777216 true "" ""
+"average-portfolio-value" 1.0 0 -2674135 true "" ""
+"max-portfolio-value" 1.0 0 -11221820 true "" ""
 
 PLOT
 558
@@ -1065,40 +1107,44 @@ NIL
 10.0
 true
 false
+"" ""
 PENS
-"min-liquidity" 1.0 0 -16777216 true
-"average-liquidity" 1.0 0 -2674135 true
-"max-liquidity" 1.0 0 -11221820 true
+"min-liquidity" 1.0 0 -16777216 true "" ""
+"average-liquidity" 1.0 0 -2674135 true "" ""
+"max-liquidity" 1.0 0 -11221820 true "" ""
 
 MONITOR
 779
 646
 856
-695
+691
 NIL
 min-liquidity
 6
 1
+11
 
 MONITOR
 782
 701
 863
-750
+746
 NIL
 max-liquidity
 6
 1
+11
 
 MONITOR
 788
 757
 892
-806
+802
 NIL
 average-liquidity
 6
 1
+11
 
 SLIDER
 4
@@ -1113,106 +1159,88 @@ max-propensity-to-decision
 0.01
 1
 NIL
+HORIZONTAL
 
 @#$#@#$#@
-WHAT IS IT?
------------
+## WHAT IS IT?
+
 The aim of our program is the creation of a financial market in which a single stock is traded; the agents (three categories) who act on such market are characterized by bounded rationality and differentiated into three types according to their behavior (Imitator, Fundamentalist and Stubborn); moreover, every agent has a tied budget, expressed by an endowment and a maximum debt they can reach before default. Through the imposition of some conditions, in part introduced by the user who can easy interact with the program and in part determined casually, we have realized some interesting simulations with various results, demonstrating that simple hypotheses are sufficient to induce complessity.
 
+## HOW TO USE IT
 
-HOW TO USE IT
--------------
-Click the SET UP button to setup the operators (patches).
-Click the GO button to run the simulation.
-The operators, or agents, can be divided into three categories: “imitator” (I), “fundamentalist” (FD) and "stubborn" (ST).
-With the sliders FUNDAMENTALISTS and IMITATORS you can choose the average percentage of fundamentalists and imitators; the percentage of Stubborns is determined residually. 
-The I are characterized, as in AFM (Artificial Financial Markets, see below), by the volatility of their opinions, the sensitivity to the news, the propensity to sentiment contagion, imitation and decision (the sentiment contagion refers to the sentiments of the I surrounding the patch; the imitation is concerned with the FD neighbours; the decision with the ST neighbors). 
-To set these features you can use the slides provided. Each slide defines the maximal value which the features can reach. Then every operator gets a randomly-distributed value between 0 and the maximum.
+Click the SET UP button to setup the operators (patches).  
+Click the GO button to run the simulation.  
+The operators, or agents, can be divided into three categories: ï¿½imitatorï¿½ (I), ï¿½fundamentalistï¿½ (FD) and "stubborn" (ST).  
+With the sliders FUNDAMENTALISTS and IMITATORS you can choose the average percentage of fundamentalists and imitators; the percentage of Stubborns is determined residually.   
+The I are characterized, as in AFM (Artificial Financial Markets, see below), by the volatility of their opinions, the sensitivity to the news, the propensity to sentiment contagion, imitation and decision (the sentiment contagion refers to the sentiments of the I surrounding the patch; the imitation is concerned with the FD neighbours; the decision with the ST neighbors).   
+To set these features you can use the slides provided. Each slide defines the maximal value which the features can reach. Then every operator gets a randomly-distributed value between 0 and the maximum.  
 The FD have only one feature: the behavior volatility, which determines their chances of turning into I.
 
-The procedure "GO" is based on the AFM model. First, new informations arrive on the market and the news have a uniform distribution between 0 and 1. Despite all the values which the news can have, every value above 0.5 is turned into 1 (good news) and every value below 0.5 is turned into -1 (bad news).
-The I act first: they set up their opinion (they can be optimistic or pessimistic) and then decide between buying and selling. 
-As in AFM, the opinion is the result of many factors: the opinion of the I neighbours (as it was in the last period) multiplied by the propensity to sentiment contagion, the mood of the FD and ST neighbours multiplied by the propensity to imitation and decision, the nature of the news, multiplied by the news-sensitivity, and a random value normally distributed (the mean of the random value is set by the slider EPSILON, while its variance is set by the slider OPINION-VOL).
-The behavior of the I is partially rational, as the new information affects their behavior. On the other hand it is partially irrational, as it takes into account the behavior of the neighbours during the last period, and there is also a random component in their decision rule.
-Another type of agent is Stubborn: they buy or sell the share randomly, they are not influenced by other agents.
-After the trading is completed, the price and the return of the share are obtained as a result of everybody’s action, and the program notes the agents' balance.
-If the return of the share moves in the direction “suggested” by the new information, the irrational operators become more confident on their neighbours, and the herding behavior of the I increases. That means the propensity to market contagion increases by the amount of the return. The effect is the same if after good news the return increases, or after bad news the return decreases. If the news are not followed by the expected movement of return, the confidence decreases.
-At the end of every period, every patch has a certain chance of changing the type: the I have a chance set by the slider NEW FUNDAMENTALIST of turning into fundamentalists. 
+The procedure "GO" is based on the AFM model. First, new informations arrive on the market and the news have a uniform distribution between 0 and 1. Despite all the values which the news can have, every value above 0.5 is turned into 1 (good news) and every value below 0.5 is turned into -1 (bad news).  
+The I act first: they set up their opinion (they can be optimistic or pessimistic) and then decide between buying and selling.   
+As in AFM, the opinion is the result of many factors: the opinion of the I neighbours (as it was in the last period) multiplied by the propensity to sentiment contagion, the mood of the FD and ST neighbours multiplied by the propensity to imitation and decision, the nature of the news, multiplied by the news-sensitivity, and a random value normally distributed (the mean of the random value is set by the slider EPSILON, while its variance is set by the slider OPINION-VOL).  
+The behavior of the I is partially rational, as the new information affects their behavior. On the other hand it is partially irrational, as it takes into account the behavior of the neighbours during the last period, and there is also a random component in their decision rule.  
+Another type of agent is Stubborn: they buy or sell the share randomly, they are not influenced by other agents.  
+After the trading is completed, the price and the return of the share are obtained as a result of everybodyï¿½s action, and the program notes the agents' balance.  
+If the return of the share moves in the direction ï¿½suggestedï¿½ by the new information, the irrational operators become more confident on their neighbours, and the herding behavior of the I increases. That means the propensity to market contagion increases by the amount of the return. The effect is the same if after good news the return increases, or after bad news the return decreases. If the news are not followed by the expected movement of return, the confidence decreases.  
+At the end of every period, every patch has a certain chance of changing the type: the I have a chance set by the slider NEW FUNDAMENTALIST of turning into fundamentalists.   
 On the other hand FD can turn optimistic or pessimistic if one of the three groups has a number of members at least as big as the value of the slider OPINION VOLATILITY surrounding the fundamentalist patch. Only the ST cannot change into anyone else, and no-one else can become ST.
 
 
+## THINGS TO NOTICE
 
-THINGS TO NOTICE
-----------------
-With the model described above, we have realized a great number of simulations, changing the parameters from time to time and turning on or off the switches, obtaining some interesting results. 
-Our model, as Artificial Financial Market, presents very frequent crashes and bubbles, normally due to an unusual dominance of one mood over the other in the I (Noise Traders in AFM). 
+With the model described above, we have realized a great number of simulations, changing the parameters from time to time and turning on or off the switches, obtaining some interesting results.   
+Our model, as Artificial Financial Market, presents very frequent crashes and bubbles, normally due to an unusual dominance of one mood over the other in the I (Noise Traders in AFM).   
 At the beginning, if endowment and maximum debt are high, the market will be more stable (even if  price or return fluctuations are possible),especially in the starting phases of the market and the failed agents are unusual. In our simulation we have fixed endowment at 30 and maximum debt at zero; different values of these parameters would postponed the same scenarios.
 
 
+## THINGS TO TRY 
 
-THINGS TO TRY 
-------------- 
-
-How can be the results different? 
-Watch how different are result when all-or-just-neighbors? switch is ON or OFF; when strong-change? switch is ON or OFF; when weak-change? is ON or OFF: the first one refers to the fact the user can choose if the I decide their behavior on the basis of the 8 closest patches or of the whole world; the other ones refers to the majority required to change their opinion. 
-It is also interesting to look at composition of the operators; the behaviour of agents that are affected by other operators produces different situations in the market, in price and return fluctuations and in case of default.
-In general we can say that when imitators are affected only by their own 8 neighbours, the market is very stable, especially if “weak change” switch is activated. Otherwise if imitators are affected by all agents the market (especially in a second phase: 51st-100th steps) presents very frequent crashes and bubbles.
-Moreover the results of simulations can vary when the weight of each kind of agents changes, in fact we can see that if the market is dominated by fundamentalists it is less stable and this instability continues during the simulation and produces a great number of failed agents, also because there are relevant bubbles. At the contrary, a market dominated by imitators is unstable in a first moment, but it became homogeneous step to step and defaults stop.
-A scenario dominated by stubborns is more stable at the beginning, but it becomes unstable during the second phase, price rises producing a real “explosion” that determines a great number of defaults.
+How can be the results different?   
+Watch how different are result when all-or-just-neighbors? switch is ON or OFF; when strong-change? switch is ON or OFF; when weak-change? is ON or OFF: the first one refers to the fact the user can choose if the I decide their behavior on the basis of the 8 closest patches or of the whole world; the other ones refers to the majority required to change their opinion.   
+It is also interesting to look at composition of the operators; the behaviour of agents that are affected by other operators produces different situations in the market, in price and return fluctuations and in case of default.  
+In general we can say that when imitators are affected only by their own 8 neighbours, the market is very stable, especially if ï¿½weak changeï¿½ switch is activated. Otherwise if imitators are affected by all agents the market (especially in a second phase: 51st-100th steps) presents very frequent crashes and bubbles.  
+Moreover the results of simulations can vary when the weight of each kind of agents changes, in fact we can see that if the market is dominated by fundamentalists it is less stable and this instability continues during the simulation and produces a great number of failed agents, also because there are relevant bubbles. At the contrary, a market dominated by imitators is unstable in a first moment, but it became homogeneous step to step and defaults stop.  
+A scenario dominated by stubborns is more stable at the beginning, but it becomes unstable during the second phase, price rises producing a real ï¿½explosionï¿½ that determines a great number of defaults.
 
 
 
+## NETLOGO FEATURES
 
-NETLOGO FEATURES
-----------------
-The screen is the market, where the agents, which are rapresented by patches, assumes different color.
-The agents who enliven the market through the sale and the purchase of actions are divided into three categories, based on their behavior: 
-1] Fondamentalists (white). They decide to buy or sell the asset if its present value is greater or smaller than the price of the asset; 
-2] Imitators (green). They base their decision on the behavior of their eight neighbors or, if the all-or-just-neighbors? switch is turn on, of all the other agents who operate in the market. At first, they become optimistic, changing their color (violet), or pessimists (black), as a result of the arrival of the news on the asset; subsequently they will modify their opinion basing on the behavior of the other agents. The user can choose the degree of dependency of their decisions, activating the switch called strong-change?, in which case such agents will change their decision only with a strong majority of purchases or sales operated by their neighbors, or the switch weak-change?, in which case they change the direction of their exchange decisions simply with a parity of purchases and sales of the neighbors; if such switches were not activated, the agent imitator would follow the behavior of the absolute majority of the neighbors. The user can choose the weight, in terms of percentages, that the imitators give to the decision of all tipology of agents; 
-3] Stubborns (red). The stubborns represent the noise traders of the market, deciding randomly whether to buy or to sell the asset.
-The user can choose the maximum percentage of agents of type fondamentalists and imitators (whose sum must not be over 100, otherwise there will be a message of error and the program will stop), therefore the program extracts a random number on the basis of which the proportion of such tipology of agents is determined; the number of stubborns is determined residually.
-The sum of the decisions of every agent determines the return of the asset, that will modify the price: every step the program re-computes the value of the balance of the operators, that is the number of own assets times the asset price, and the liquidity, modified by adding (in case of sale) or subtracting (in case of purchase) an amount equal to the price of the asset. 
-An agent fails when her portfolio value and her liquidity is inferior than themaximum debt established by the user of the program. If only liquidity is inferior than maximum debt agent sells his shares to exceed its threshold value; otherwise if only portfolio value is inferior than maximum debt, because of a great number of short sales, liquidity is mobilized to buy assets just to get the portfolio value over its superior limit again.
-Failed agents change their colour and they become yellow, they stop to belong to one of the three typologies of agents and lose their shares, moreover they don’t affect the other agents’ behaviour any more.
+The screen is the market, where the agents, which are rapresented by patches, assumes different color.  
+The agents who enliven the market through the sale and the purchase of actions are divided into three categories, based on their behavior:   
+1] Fondamentalists (white). They decide to buy or sell the asset if its present value is greater or smaller than the price of the asset;   
+2] Imitators (green). They base their decision on the behavior of their eight neighbors or, if the all-or-just-neighbors? switch is turn on, of all the other agents who operate in the market. At first, they become optimistic, changing their color (violet), or pessimists (black), as a result of the arrival of the news on the asset; subsequently they will modify their opinion basing on the behavior of the other agents. The user can choose the degree of dependency of their decisions, activating the switch called strong-change?, in which case such agents will change their decision only with a strong majority of purchases or sales operated by their neighbors, or the switch weak-change?, in which case they change the direction of their exchange decisions simply with a parity of purchases and sales of the neighbors; if such switches were not activated, the agent imitator would follow the behavior of the absolute majority of the neighbors. The user can choose the weight, in terms of percentages, that the imitators give to the decision of all tipology of agents;   
+3] Stubborns (red). The stubborns represent the noise traders of the market, deciding randomly whether to buy or to sell the asset.  
+The user can choose the maximum percentage of agents of type fondamentalists and imitators (whose sum must not be over 100, otherwise there will be a message of error and the program will stop), therefore the program extracts a random number on the basis of which the proportion of such tipology of agents is determined; the number of stubborns is determined residually.  
+The sum of the decisions of every agent determines the return of the asset, that will modify the price: every step the program re-computes the value of the balance of the operators, that is the number of own assets times the asset price, and the liquidity, modified by adding (in case of sale) or subtracting (in case of purchase) an amount equal to the price of the asset.   
+An agent fails when her portfolio value and her liquidity is inferior than themaximum debt established by the user of the program. If only liquidity is inferior than maximum debt agent sells his shares to exceed its threshold value; otherwise if only portfolio value is inferior than maximum debt, because of a great number of short sales, liquidity is mobilized to buy assets just to get the portfolio value over its superior limit again.  
+Failed agents change their colour and they become yellow, they stop to belong to one of the three typologies of agents and lose their shares, moreover they donï¿½t affect the other agentsï¿½ behaviour any more.  
 The simulation has also six graphs: the price, the variation of price as a percentage, the return, the volatility of return, the minimum-average-maximum portfolio value and the minimum-average-maximum liquidity.
 
+## SETTING THE PARAMETERS
 
-SETTING THE PARAMETERS
---------------
 It can be interesting to see what happens to the market by changing MAX-NEWS-SENSIBILITY, PROPENSITY-TO-IMITATION, PROPENSITY-TO SENTIMENT-CONTAGION and PROPENSITY-TO-DECISION (they characterize the behaviour of imitators with respect to news and to the opinion of imitators, fondamentalists and stubborns).
 
+## EXTENDING THE MODEL
 
-EXTENDING THE MODEL
--------------------
-As explained before, in this market agents can swap only one type of stock per time; furthermore, the number of shares is potentially infinite, because agents can sell or buy the stock when they want with an "invisible counterpart" and the stock price is calculated on the basis of the direction of the trades and not on the operators' opinion.
+As explained before, in this market agents can swap only one type of stock per time; furthermore, the number of shares is potentially infinite, because agents can sell or buy the stock when they want with an "invisible counterpart" and the stock price is calculated on the basis of the direction of the trades and not on the operators' opinion.  
 What would happen if these restrictions were removed?
 
 
+## CREDITS AND REFERENCES
 
-CREDITS AND REFERENCES
-----------------------
-To write our program, we started from these these models:
-- Wilensky U., VOTING, 1998 ( http://ccl.northwestern.edu/netlogo/models/Voting )
-- Gonçalves C.P., ARTIFICIAL FINANCIAL MARKET, 2003
- ( http://ccl.northwestern.edu/netlogo/models/community/Artificial%20Financial%20Market )
-- Bizzotto J. - S.Bolatto - S.Minardi, LMMODEL, 2005
+To write our program, we started from these these models:  
+- Wilensky U., VOTING, 1998 ( http://ccl.northwestern.edu/netlogo/models/Voting )  
+- Gonï¿½alves C.P., ARTIFICIAL FINANCIAL MARKET, 2003
+ ( http://ccl.northwestern.edu/netlogo/models/community/Artificial%20Financial%20Market )  
+- Bizzotto J. - S.Bolatto - S.Minardi, LMMODEL, 2005  
 ( http://web.econ.unito.it/terna/tesine/luxandmarchesi )
 @#$#@#$#@
 default
 true
 0
 Polygon -7500403 true true 150 5 40 250 150 205 260 250
-
-link
-true
-0
-Line -7500403 true 150 0 150 300
-
-link direction
-true
-0
-Line -7500403 true 150 150 30 225
-Line -7500403 true 150 150 270 225
 
 airplane
 true
@@ -1360,6 +1388,17 @@ true
 0
 Line -7500403 true 150 0 150 300
 
+link
+true
+0
+Line -7500403 true 150 0 150 300
+
+link direction
+true
+0
+Line -7500403 true 150 150 30 225
+Line -7500403 true 150 150 270 225
+
 pentagon
 false
 0
@@ -1478,8 +1517,23 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 3.1
+NetLogo 5.1.0
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
+@#$#@#$#@
+@#$#@#$#@
+default
+0.0
+-0.2 0 0.0 1.0
+0.0 1 1.0 0.0
+0.2 0 0.0 1.0
+link direction
+true
+0
+Line -7500403 true 150 150 90 180
+Line -7500403 true 150 150 210 180
+
+@#$#@#$#@
+0
 @#$#@#$#@
