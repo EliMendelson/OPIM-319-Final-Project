@@ -222,8 +222,8 @@ patches-own[ my-sentiment
    
   to typical-decision
     ask patches with [pcolor = green]
-   [let random-value random-float 0.8
-   ifelse ((present-value * random-value) > (log-price * 0.4))
+   [let random-value (random-float 0.8) + 0.6
+   ifelse ((present-value * random-value) > log-price)
    [set my-decision 1
    set number-of-shares number-of-shares + 1]
    [set my-decision -1
@@ -287,8 +287,8 @@ patches-own[ my-sentiment
  
  to smart-decision
   ask patches with [pcolor = white] 
-  [let random-value random-float 0.4
-  ifelse ((present-value * random-value) > (log-price * 0.2)) 
+  [let random-value (random-float 0.4) + 0.8
+  ifelse ((present-value * random-value) > log-price) 
   [set my-convinction 1
   set number-of-shares number-of-shares + 1]
   [set my-convinction -1
@@ -303,8 +303,8 @@ patches-own[ my-sentiment
  
  to risky-decision
    ask patches with [pcolor = red]
-   [let random-value random-float 1.2
-   ifelse ((present-value * random-value) > (log-price * 0.6))
+   [let random-value (random-float 1.2) + 0.4
+   ifelse ((present-value * random-value) > log-price)
    [set my-decision 1
    set number-of-shares number-of-shares + 1]
    [set my-decision -1
@@ -470,28 +470,28 @@ patches-own[ my-sentiment
  ; [change-type2]]
  ;end
    
-    to change-type1 ;; The "fundamentalist" become pessimistic.
-    ask patches with [pcolor = white]
-    [if (random-float 100) < change-probability
-    [set pcolor black]]
-    set opinion-vol (sigma + random-float 0.1)
-    set news-sensitivity (random-float max-news-sensitivity)
-    set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
-    set typical-counter 1
-    set pessimists-counter 1
-    set smart-counter 0
-   end
-   to change-type2 ;; The "fundamentalist" become optimistic.
-    ask patches with [pcolor = white]
-    [if (random-float 100) < change-probability
-    [set pcolor blue + 3]]
-    set opinion-vol (sigma + random-float 0.1)
-    set news-sensitivity (random-float max-news-sensitivity)
-    set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
-    set typical-counter 1
-    set optimists-counter 1
-    set smart-counter 0
-   end
+ ;   to change-type1 ;; The "fundamentalist" become pessimistic.
+ ;   ask patches with [pcolor = white]
+ ;   [if (random-float 100) < change-probability
+ ;   [set pcolor black]]
+ ;   set opinion-vol (sigma + random-float 0.1)
+ ;   set news-sensitivity (random-float max-news-sensitivity)
+ ;   set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
+ ;   set typical-counter 1
+ ;   set pessimists-counter 1
+ ;   set smart-counter 0
+ ;  end
+ ;  to change-type2 ;; The "fundamentalist" become optimistic.
+ ;   ask patches with [pcolor = white]
+ ;   [if (random-float 100) < change-probability
+ ;   [set pcolor blue + 3]]
+ ;   set opinion-vol (sigma + random-float 0.1)
+ ;   set news-sensitivity (random-float max-news-sensitivity)
+ ;   set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
+ ;   set typical-counter 1
+ ;   set optimists-counter 1
+ ;   set smart-counter 0
+ ;  end
 
  
  ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -915,7 +915,7 @@ SWITCH
 112
 all-or-just-neighbors?
 all-or-just-neighbors?
-0
+1
 1
 -1000
 
@@ -1020,7 +1020,7 @@ maximum-debt
 maximum-debt
 -1000000
 0
-0
+-660
 10
 1
 NIL
