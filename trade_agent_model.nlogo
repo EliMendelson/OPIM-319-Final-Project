@@ -221,54 +221,61 @@ patches-own[ my-sentiment
  
    
   to typical-decision
-  ask patches
-  [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-  [ifelse all-or-just-neighbors?
-  [set my-total (propensity-to-sentiment-contagion * sum [my-sentiment] of patches +
-  propensity-to-imitation * sum [my-convinction] of patches + propensity-to-decision * sum [my-decision] of patches +
-  news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol)]
-  [set my-total (sum [ propensity-to-sentiment-contagion * my-sentiment +
-  propensity-to-imitation * my-convinction + propensity-to-decision * my-decision +
-  news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol ] of neighbors ) ]]]
-  ask patches
-  [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-    [ifelse (my-total > 1)
-      [set my-sentiment 1
-      set number-of-shares number-of-shares + 1
-      set optimists-counter 1
-      set pessimists-counter 0]
-        [ifelse (my-total > 0)
-          [ifelse strong-change?
-          [set my-sentiment -1
-          set number-of-shares number-of-shares - 1
-          set pessimists-counter 1
-          set optimists-counter 0]
-          [set my-sentiment 1
-          set number-of-shares number-of-shares + 1
-          set pessimists-counter 0
-          set optimists-counter 1]]
-            [ifelse (my-total = 0)
-              [ifelse weak-change?
-              [set my-sentiment 1
-              set number-of-shares number-of-shares + 1
-              set pessimists-counter 0
-              set optimists-counter 1]   
-              [set my-sentiment -1
-              set number-of-shares number-of-shares - 1
-              set pessimists-counter 1
-              set optimists-counter 0]]
-      [set my-sentiment -1
-      set number-of-shares number-of-shares - 1
-      set pessimists-counter 1
-      set optimists-counter 0]]]]]
+    ask patches with [pcolor = green]
+   [let random-value random-float 0.8
+   ifelse ((present-value * random-value) > (log-price * 0.4))
+   [set my-decision 1
+   set number-of-shares number-of-shares + 1]
+   [set my-decision -1
+   set number-of-shares number-of-shares - 1]]
+  ;ask patches
+  ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
+  ;[ifelse all-or-just-neighbors?
+  ;[set my-total (propensity-to-sentiment-contagion * sum [my-sentiment] of patches +
+  ;propensity-to-imitation * sum [my-convinction] of patches + propensity-to-decision * sum [my-decision] of patches +
+  ;news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol)]
+  ;[set my-total (sum [ propensity-to-sentiment-contagion * my-sentiment +
+  ;propensity-to-imitation * my-convinction + propensity-to-decision * my-decision +
+  ;news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol ] of neighbors ) ]]]
+  ;ask patches
+  ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
+  ;  [ifelse (my-total > 1)
+  ;    [set my-sentiment 1
+  ;    set number-of-shares number-of-shares + 1
+  ;    set optimists-counter 1
+  ;    set pessimists-counter 0]
+  ;      [ifelse (my-total > 0)
+  ;        [ifelse strong-change?
+  ;        [set my-sentiment -1
+  ;        set number-of-shares number-of-shares - 1
+  ;        set pessimists-counter 1
+  ;        set optimists-counter 0]
+  ;        [set my-sentiment 1
+  ;        set number-of-shares number-of-shares + 1
+  ;        set pessimists-counter 0
+  ;        set optimists-counter 1]]
+  ;          [ifelse (my-total = 0)
+  ;            [ifelse weak-change?
+  ;            [set my-sentiment 1
+  ;            set number-of-shares number-of-shares + 1
+  ;            set pessimists-counter 0
+  ;            set optimists-counter 1]   
+  ;            [set my-sentiment -1
+  ;            set number-of-shares number-of-shares - 1
+  ;            set pessimists-counter 1
+  ;            set optimists-counter 0]]
+  ;    [set my-sentiment -1
+  ;    set number-of-shares number-of-shares - 1
+  ;    set pessimists-counter 1
+  ;    set optimists-counter 0]]]]]
   
   ;; separate pessimists from optimists:
-  ask patches
-  [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-  [if my-sentiment = 1
-  [set pcolor blue + 3]
-  if my-sentiment = -1
-  [set pcolor black]]]
+  ;ask patches
+  ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
+  ;[if my-sentiment = 1
+  ;[set pcolor blue + 3]
+  ;if my-sentiment = -1
+  ;[set pcolor black]]]
   end
  
  
@@ -280,7 +287,8 @@ patches-own[ my-sentiment
  
  to smart-decision
   ask patches with [pcolor = white] 
-  [ifelse (present-value > log-price) 
+  [let random-value random-float 0.4
+  ifelse ((present-value * random-value) > (log-price * 0.2)) 
   [set my-convinction 1
   set number-of-shares number-of-shares + 1]
   [set my-convinction -1
@@ -295,7 +303,8 @@ patches-own[ my-sentiment
  
  to risky-decision
    ask patches with [pcolor = red]
-   [ifelse (random-float 1) >= .5
+   [let random-value random-float 1.2
+   ifelse ((present-value * random-value) > (log-price * 0.6))
    [set my-decision 1
    set number-of-shares number-of-shares + 1]
    [set my-decision -1
@@ -531,7 +540,6 @@ patches-own[ my-sentiment
   set-current-plot-pen "Average-liquidity" 
   plot average-liquidity
   end
-
 
 @#$#@#$#@
 GRAPHICS-WINDOW
