@@ -1020,7 +1020,7 @@ maximum-debt
 maximum-debt
 -1000000
 0
--660
+0
 10
 1
 NIL
