@@ -154,7 +154,7 @@ patches-own[ my-sentiment
   [set pcolor red]]]]
     
   set present-value 0
-  set log-price 0
+  set log-price 1
   set time 0
   ask patches
   [set liquidity endowment]
@@ -363,6 +363,7 @@ patches-own[ my-sentiment
               set offer-x pxcor
               set offer-y pycor]
           ]
+        ]
         if best-offer < agent-evaluation
         [ set number-of-shares number-of-shares + 1
           set liquidity liquidity - best-offer
@@ -371,7 +372,7 @@ patches-own[ my-sentiment
             set liquidity liquidity + best-offer
             if pcolor = green [set typical-smart-trades typical-typical-trades + 1]
             if pcolor = white [set smart-smart-trades typical-smart-trades + 1]
-            if pcolor = red [set risky-smart-trades risky-typical-trades + 1]]]
+            if pcolor = red [set risky-smart-trades risky-typical-trades + 1]]
           ]
          ]
        [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
@@ -391,7 +392,9 @@ patches-own[ my-sentiment
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares + 1
             set liquidity liquidity - best-offer
-            ]
+            if pcolor = green [set typical-smart-trades typical-typical-trades + 1]
+            if pcolor = white [set smart-smart-trades typical-smart-trades + 1]
+            if pcolor = red [set risky-smart-trades risky-typical-trades + 1]]
           ]
          ]
        ]
@@ -427,7 +430,10 @@ patches-own[ my-sentiment
           set liquidity liquidity - best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares - 1
-            set liquidity liquidity + best-offer]
+            set liquidity liquidity + best-offer
+            if pcolor = green [set risky-typical-trades typical-typical-trades + 1]
+            if pcolor = white [set risky-smart-trades typical-smart-trades + 1]
+            if pcolor = red [set risky-risky-trades risky-typical-trades + 1]]
           ]
          ]
        [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
@@ -446,7 +452,10 @@ patches-own[ my-sentiment
           set liquidity liquidity + best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares + 1
-            set liquidity liquidity - best-offer]
+            set liquidity liquidity - best-offer
+            if pcolor = green [set risky-typical-trades typical-typical-trades + 1]
+            if pcolor = white [set risky-smart-trades typical-smart-trades + 1]
+            if pcolor = red [set risky-risky-trades risky-typical-trades + 1]]
           ]
          ]
        ]
@@ -476,10 +485,10 @@ patches-own[ my-sentiment
    ;; The denominator is the number of agents.
    set return-denominator count patches with [pcolor != yellow]
    ;; The numerator is the difference between sellers and buyers.
-   set return-numerator1 sum [my-convinction] of patches 
-   set return-numerator2 sum [my-sentiment] of patches
-   set return-numerator3 sum [my-decision] of patches
-   set return-numerator (return-numerator1 + return-numerator2 + return-numerator3)
+   ;set return-numerator1 sum [my-convinction] of patches 
+   ;set return-numerator2 sum [my-sentiment] of patches
+   ;set return-numerator3 sum [my-decision] of patches
+   set return-numerator (risky-risky-trades + risky-typical-trades + risky-smart-trades + typical-typical-trades + typical-smart-trades + smart-smart-trades)
    ;; The return modifies the price of the share.
    ask patches
    [ifelse return-denominator = 0
