@@ -407,6 +407,7 @@ patches-own[ my-sentiment
  ;
  
  to risky-decision
+   let track-best-offer []
    ask patches with [pcolor = red]
     [ let agent-evaluation ((random-float 1.2) + 0.4) * present-value       ; agent's evaluation of a share
       let best-offer agent-evaluation
@@ -421,6 +422,7 @@ patches-own[ my-sentiment
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
+              set track-best-offer lput best-offer track-best-offer ;;;; sok 
               set offer-x pxcor
               set offer-y pycor]
             ]
@@ -435,7 +437,7 @@ patches-own[ my-sentiment
             if pcolor = white [set risky-smart-trades typical-smart-trades + 1]
             if pcolor = red [set risky-risky-trades risky-typical-trades + 1]]
           ]
-         ]
+         ] ; end of if in ifelse. next for agent-evaluation <= price
        [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
          [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
            if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
@@ -457,8 +459,9 @@ patches-own[ my-sentiment
             if pcolor = white [set risky-smart-trades typical-smart-trades + 1]
             if pcolor = red [set risky-risky-trades risky-typical-trades + 1]]
           ]
-         ]
+         ] ; end of else in ifelse, [ask neighbors ....
        ]
+    print (word "Risky-decision " track-best-offer)
    end
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -840,7 +843,7 @@ smart
 smart
 0
 100
-52
+33
 1
 1
 NIL
@@ -1047,7 +1050,7 @@ typical
 typical
 0
 100
-44
+33
 1
 1
 NIL
