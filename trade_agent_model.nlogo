@@ -153,7 +153,7 @@ patches-own[ my-sentiment
   [set pcolor green]
   [set pcolor red]]]]
     
-  set present-value 0
+  set present-value 7
   set log-price 2.3
   set time 0
   ask patches
@@ -840,7 +840,7 @@ smart
 smart
 0
 100
-33
+52
 1
 1
 NIL
@@ -1047,7 +1047,7 @@ typical
 typical
 0
 100
-33
+44
 1
 1
 NIL
