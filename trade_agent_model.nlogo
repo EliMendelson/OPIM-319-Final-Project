@@ -56,6 +56,9 @@ patches-own[ my-sentiment
              pessimists-counter
              ;; Allows the counting of the different type of traders.
              
+             ;;share-evaluation
+             ;; What the trader evaluates share value to be (depends on the type of trader)
+             
              random-number] 
              ;; It is a random number between 0 (included) and 1 (not included).
              
@@ -108,7 +111,14 @@ patches-own[ my-sentiment
          return-denominator
          return
          ;; The return of the market is calculated dividing the difference between buyers and sellers by the total amont of operators.       
-      
+         
+         risky-risky-trades
+         risky-typical-trades
+         risky-smart-trades
+         typical-typical-trades
+         typical-smart-trades
+         smart-smart-trades
+         
          news-qualitative-meaning 
          ;; The news concerning the market get to every operator, and they are the rational component of the decision 
                   
@@ -197,8 +207,13 @@ patches-own[ my-sentiment
  to old-number
  ask patches
  [set old-number-of-shares number-of-shares]
- end
-
+ set risky-risky-trades 0
+ set risky-typical-trades 0
+ set risky-smart-trades 0
+ set typical-typical-trades 0
+ set typical-smart-trades 0
+ set smart-smart-trades 0
+ end 
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;
  ; News Arrival mechanism ;
@@ -222,12 +237,57 @@ patches-own[ my-sentiment
    
   to typical-decision
     ask patches with [pcolor = green]
-   [let random-value (random-float 0.8) + 0.6
-   ifelse ((present-value * random-value) > log-price)
-   [set my-decision 1
-   set number-of-shares number-of-shares + 1]
-   [set my-decision -1
-   set number-of-shares number-of-shares - 1]]
+    [ let agent-evaluation ((random-float 0.8) + 0.6) * present-value       ; agent's evaluation of a share
+      let best-offer agent-evaluation
+      let offer-x 0    ; offer-x is the best offer's x-coordinate
+      let offer-y 0    ; offer-y is the best offer's y-coordinate
+      let neighbor-eval agent-evaluation
+      ifelse (agent-evaluation > price)
+       [ ask neighbors                      ; Agent wants to buy a share --> neighbor places bid (for two more than their evaluation) if they want to sell a share
+        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
+          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
+          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+          if neighbor-eval < price    ; Looking only at sellers
+          [ if neighbor-eval + 2 < best-offer
+            [ set best-offer neighbor-eval + 2
+              set offer-x pxcor
+              set offer-y pycor]
+            ]
+          ]
+        if best-offer < agent-evaluation
+        [ set number-of-shares number-of-shares + 1
+          set liquidity liquidity - best-offer
+          ask neighbors with [pxcor = offer-x and pycor = offer-y]
+          [ set number-of-shares number-of-shares - 1
+            set liquidity liquidity + best-offer
+            if pcolor = green [set typical-typical-trades typical-typical-trades + 1]
+            if pcolor = white [set typical-smart-trades typical-smart-trades + 1]
+            if pcolor = red [set risky-typical-trades risky-typical-trades + 1]]
+          ]
+         ]
+       [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
+         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
+           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
+           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+           if neighbor-eval > price    ; Looking only at buyers
+           [ if neighbor-eval - 2 > best-offer
+            [ set best-offer neighbor-eval - 2
+              set offer-x pxcor
+              set offer-y pycor]
+            ]
+          ]
+         if best-offer > agent-evaluation
+         [ set number-of-shares number-of-shares - 1
+          set liquidity liquidity + best-offer
+          ask neighbors with [pxcor = offer-x and pycor = offer-y]
+          [ set number-of-shares number-of-shares + 1
+            set liquidity liquidity - best-offer
+            if pcolor = green [set typical-typical-trades typical-typical-trades + 1]
+            if pcolor = white [set typical-smart-trades typical-smart-trades + 1]
+            if pcolor = red [set risky-typical-trades risky-typical-trades + 1]]
+          ]
+         ]
+       ]
   ;ask patches
   ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
   ;[ifelse all-or-just-neighbors?
@@ -286,13 +346,55 @@ patches-own[ my-sentiment
  ;
  
  to smart-decision
-  ask patches with [pcolor = white] 
-  [let random-value (random-float 0.4) + 0.8
-  ifelse ((present-value * random-value) > log-price) 
-  [set my-convinction 1
-  set number-of-shares number-of-shares + 1]
-  [set my-convinction -1
-  set number-of-shares number-of-shares - 1]]
+  ask patches with [pcolor = white]
+    [ let agent-evaluation ((random-float 0.4) + 0.8) * present-value       ; agent's evaluation of a share
+      let best-offer agent-evaluation
+      let offer-x 0    ; offer-x is the best offer's x-coordinate
+      let offer-y 0    ; offer-y is the best offer's y-coordinate
+      let neighbor-eval agent-evaluation
+      ifelse (agent-evaluation > price)
+       [ ask neighbors                      ; Agent wants to buy a share --> neighbor places bid (for two more than their evaluation) if they want to sell a share
+        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
+          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
+          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+          if neighbor-eval < price    ; Looking only at sellers
+          [ if neighbor-eval + 2 < best-offer
+            [ set best-offer neighbor-eval + 2
+              set offer-x pxcor
+              set offer-y pycor]
+          ]
+        if best-offer < agent-evaluation
+        [ set number-of-shares number-of-shares + 1
+          set liquidity liquidity - best-offer
+          ask neighbors with [pxcor = offer-x and pycor = offer-y]
+          [ set number-of-shares number-of-shares - 1
+            set liquidity liquidity + best-offer
+            if pcolor = green [set typical-smart-trades typical-typical-trades + 1]
+            if pcolor = white [set smart-smart-trades typical-smart-trades + 1]
+            if pcolor = red [set risky-smart-trades risky-typical-trades + 1]]]
+          ]
+         ]
+       [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
+         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
+           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
+           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+           if neighbor-eval > price    ; Looking only at buyers
+           [ if neighbor-eval - 2 > best-offer
+            [ set best-offer neighbor-eval - 2
+              set offer-x pxcor
+              set offer-y pycor]
+            ]
+          ]
+         if best-offer > agent-evaluation
+         [ set number-of-shares number-of-shares - 1
+          set liquidity liquidity + best-offer
+          ask neighbors with [pxcor = offer-x and pycor = offer-y]
+          [ set number-of-shares number-of-shares + 1
+            set liquidity liquidity - best-offer
+            ]
+          ]
+         ]
+       ]
  end 
  
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -303,12 +405,51 @@ patches-own[ my-sentiment
  
  to risky-decision
    ask patches with [pcolor = red]
-   [let random-value (random-float 1.2) + 0.4
-   ifelse ((present-value * random-value) > log-price)
-   [set my-decision 1
-   set number-of-shares number-of-shares + 1]
-   [set my-decision -1
-   set number-of-shares number-of-shares - 1]]
+    [ let agent-evaluation ((random-float 1.2) + 0.4) * present-value       ; agent's evaluation of a share
+      let best-offer agent-evaluation
+      let offer-x 0    ; offer-x is the best offer's x-coordinate
+      let offer-y 0    ; offer-y is the best offer's y-coordinate
+      let neighbor-eval agent-evaluation
+      ifelse (agent-evaluation > price)
+       [ ask neighbors                      ; Agent wants to buy a share --> neighbor places bid (for two more than their evaluation) if they want to sell a share
+        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
+          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
+          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+          if neighbor-eval < price    ; Looking only at sellers
+          [ if neighbor-eval + 2 < best-offer
+            [ set best-offer neighbor-eval + 2
+              set offer-x pxcor
+              set offer-y pycor]
+            ]
+          ]
+        if best-offer < agent-evaluation
+        [ set number-of-shares number-of-shares + 1
+          set liquidity liquidity - best-offer
+          ask neighbors with [pxcor = offer-x and pycor = offer-y]
+          [ set number-of-shares number-of-shares - 1
+            set liquidity liquidity + best-offer]
+          ]
+         ]
+       [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
+         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
+           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
+           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+           if neighbor-eval > price    ; Looking only at buyers
+           [ if neighbor-eval - 2 > best-offer
+            [ set best-offer neighbor-eval - 2
+              set offer-x pxcor
+              set offer-y pycor]
+            ]
+          ]
+         if best-offer > agent-evaluation
+         [ set number-of-shares number-of-shares - 1
+          set liquidity liquidity + best-offer
+          ask neighbors with [pxcor = offer-x and pycor = offer-y]
+          [ set number-of-shares number-of-shares + 1
+            set liquidity liquidity - best-offer]
+          ]
+         ]
+       ]
    end
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -540,7 +681,6 @@ patches-own[ my-sentiment
   set-current-plot-pen "Average-liquidity" 
   plot average-liquidity
   end
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 386
@@ -893,7 +1033,7 @@ SWITCH
 176
 weak-change?
 weak-change?
-0
+1
 1
 -1000
 
