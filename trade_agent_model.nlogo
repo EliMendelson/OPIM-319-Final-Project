@@ -154,7 +154,7 @@ patches-own[ my-sentiment
   [set pcolor red]]]]
     
   set present-value 0
-  set log-price 1
+  set log-price 2.3
   set time 0
   ask patches
   [set liquidity endowment]
@@ -689,6 +689,24 @@ patches-own[ my-sentiment
   plot max-liquidity
   set-current-plot-pen "Average-liquidity" 
   plot average-liquidity
+  set-current-plot "Risky-Risky Trades"
+  set-current-plot-pen "risky-risky-trades"
+  plot risky-risky-trades
+  set-current-plot "Risky-Typical Trades"
+  set-current-plot-pen "risky-typical-trades"
+  plot risky-typical-trades
+  set-current-plot "Risky-Smart Trades"
+  set-current-plot-pen "risky-smart-trades"
+  plot risky-smart-trades
+  set-current-plot "Typical-Typical Trades"
+  set-current-plot-pen "typical-typical-trades"
+  plot typical-typical-trades
+  set-current-plot "Typical-Smart Trades"
+  set-current-plot-pen "typical-smart-trades"
+  plot typical-smart-trades
+  set-current-plot "Smart-Smart Trades"
+  set-current-plot-pen "smart-smart-trades"
+  plot smart-smart-trades
   end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -1069,10 +1087,10 @@ all-or-just-neighbors?
 -1000
 
 MONITOR
-760
-439
-855
-484
+743
+590
+838
+635
 NIL
 average-price\n
 3
@@ -1080,10 +1098,10 @@ average-price\n
 11
 
 MONITOR
-862
-438
-959
-483
+837
+590
+934
+635
 NIL
 average-return
 3
@@ -1102,10 +1120,10 @@ time
 11
 
 MONITOR
-757
-338
-854
-383
+742
+494
+839
+539
 NIL
 min-price
 3
@@ -1113,10 +1131,10 @@ min-price
 11
 
 MONITOR
-759
-387
-854
-432
+744
+543
+839
+588
 NIL
 max-price
 3
@@ -1124,10 +1142,10 @@ max-price
 11
 
 MONITOR
-861
-338
-958
-383
+846
+494
+943
+539
 NIL
 min-return
 3
@@ -1135,10 +1153,10 @@ min-return
 11
 
 MONITOR
-861
-388
-959
-433
+846
+544
+944
+589
 NIL
 max-return
 3
@@ -1317,6 +1335,114 @@ max-propensity-to-decision
 1
 NIL
 HORIZONTAL
+
+PLOT
+757
+10
+957
+160
+Risky-Risky Trades
+time
+# of trades
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"risky-risky-trades" 1.0 0 -2674135 true "" ""
+
+PLOT
+957
+10
+1157
+160
+Risky-Typical Trades
+time
+# of trades
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"risky-typical-trades" 1.0 0 -6459832 true "" ""
+
+PLOT
+757
+160
+957
+310
+Risky-Smart Trades
+time
+# of trades
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"risky-smart-trades" 1.0 0 -1604481 true "" ""
+
+PLOT
+957
+160
+1157
+310
+Typical-Typical Trades
+time
+# of trades
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"typical-typical-trades" 1.0 0 -10899396 true "" ""
+
+PLOT
+757
+310
+957
+460
+Typical-Smart Trades
+time
+# of trades
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"typical-smart-trades" 1.0 0 -6565750 true "" ""
+
+PLOT
+957
+310
+1157
+460
+Smart-Smart Trades
+time
+# of trades
+0.0
+10.0
+0.0
+10.0
+true
+false
+"" ""
+PENS
+"smart-smart-trades" 1.0 0 -16777216 true "" ""
 
 @#$#@#$#@
 ## WHAT IS IT?
