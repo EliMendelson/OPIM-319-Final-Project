@@ -119,6 +119,8 @@ patches-own[ my-sentiment
          typical-smart-trades
          smart-smart-trades
          
+         track-best-offer
+         
          news-qualitative-meaning 
          ;; The news concerning the market get to every operator, and they are the rational component of the decision 
                   
@@ -213,6 +215,7 @@ patches-own[ my-sentiment
  set typical-typical-trades 0
  set typical-smart-trades 0
  set smart-smart-trades 0
+ set track-best-offer 0.0
  end 
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -250,6 +253,7 @@ patches-own[ my-sentiment
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
+              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
@@ -272,6 +276,7 @@ patches-own[ my-sentiment
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
+              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
@@ -360,6 +365,7 @@ patches-own[ my-sentiment
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
+              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
           ]
@@ -382,6 +388,7 @@ patches-own[ my-sentiment
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
+              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
@@ -407,7 +414,7 @@ patches-own[ my-sentiment
  ;
  
  to risky-decision
-   let track-best-offer []
+   ;let track-best-offer []
    ask patches with [pcolor = red]
     [ let agent-evaluation ((random-float 1.2) + 0.4) * present-value       ; agent's evaluation of a share
       let best-offer agent-evaluation
@@ -422,7 +429,8 @@ patches-own[ my-sentiment
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
-              set track-best-offer lput best-offer track-best-offer ;;;; sok 
+              ;set track-best-offer lput best-offer track-best-offer ;;;; sok 
+              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
@@ -445,6 +453,7 @@ patches-own[ my-sentiment
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
+              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
@@ -461,7 +470,7 @@ patches-own[ my-sentiment
           ]
          ] ; end of else in ifelse, [ask neighbors ....
        ]
-    print (word "Risky-decision " track-best-offer)
+    ;print (word "Risky-decision " track-best-offer)
    end
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -496,7 +505,7 @@ patches-own[ my-sentiment
    ask patches
    [ifelse return-denominator = 0
    [set return 0] 
-   [set return return-numerator / return-denominator]]
+   [set return track-best-offer / return-denominator]]
    set old-price price
    set log-price log-price + return
    set price exp log-price
