@@ -119,6 +119,7 @@ patches-own[ my-sentiment
          typical-smart-trades
          smart-smart-trades
          
+         old-best-offer
          track-best-offer
          
          news-qualitative-meaning 
@@ -155,10 +156,11 @@ patches-own[ my-sentiment
   [set pcolor green]
   [set pcolor red]]]]
     
-  set present-value 7
-  set log-price 2.3
+  set present-value 10.0
+  set log-price 10.0
   set price log-price
-  set track-best-offer 5.0
+  set track-best-offer 2.3
+  set old-best-offer track-best-offer
   set time 0
   ask patches
   [set liquidity endowment]
@@ -241,16 +243,16 @@ patches-own[ my-sentiment
    
   to typical-decision
     ask patches with [pcolor = green]
-    [ let agent-evaluation ((random-float 0.8) + 0.6) * present-value       ; agent's evaluation of a share
+    [ let agent-evaluation ((random-float 0.8) + 0.6) * price;present-value       ; agent's evaluation of a share
       let best-offer agent-evaluation
       let offer-x 0    ; offer-x is the best offer's x-coordinate
       let offer-y 0    ; offer-y is the best offer's y-coordinate
       let neighbor-eval agent-evaluation
       ifelse (agent-evaluation > price)
        [ ask neighbors                      ; Agent wants to buy a share --> neighbor places bid (for two more than their evaluation) if they want to sell a share
-        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
-          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
-          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * price];present-value]
+          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * price];present-value]
+          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * price];present-value]
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
@@ -271,9 +273,9 @@ patches-own[ my-sentiment
           ]
          ]
        [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
-         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
-           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
-           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * price];present-value]
+           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * price];present-value]
+           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * price];present-value]
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
@@ -353,16 +355,16 @@ patches-own[ my-sentiment
  
  to smart-decision
   ask patches with [pcolor = white]
-    [ let agent-evaluation ((random-float 0.4) + 0.8) * present-value       ; agent's evaluation of a share
+    [ let agent-evaluation ((random-float 0.4) + 0.8) * price;present-value       ; agent's evaluation of a share
       let best-offer agent-evaluation
       let offer-x 0    ; offer-x is the best offer's x-coordinate
       let offer-y 0    ; offer-y is the best offer's y-coordinate
       let neighbor-eval agent-evaluation
       ifelse (agent-evaluation > price)
        [ ask neighbors                      ; Agent wants to buy a share --> neighbor places bid (for two more than their evaluation) if they want to sell a share
-        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
-          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
-          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * price];present-value]
+          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * price];present-value]
+          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * price];present-value]
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
@@ -383,9 +385,9 @@ patches-own[ my-sentiment
           ]
          ]
        [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
-         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
-           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
-           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * price];present-value]
+           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * price];present-value]
+           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * price];present-value]
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
@@ -417,16 +419,16 @@ patches-own[ my-sentiment
  to risky-decision
    ;let track-best-offer []
    ask patches with [pcolor = red]
-    [ let agent-evaluation ((random-float 1.2) + 0.4) * present-value       ; agent's evaluation of a share
+    [ let agent-evaluation ((random-float 1.2) + 0.4) * price;present-value       ; agent's evaluation of a share
       let best-offer agent-evaluation
       let offer-x 0    ; offer-x is the best offer's x-coordinate
       let offer-y 0    ; offer-y is the best offer's y-coordinate
       let neighbor-eval agent-evaluation
       ifelse (agent-evaluation > price)
        [ ask neighbors                      ; Agent wants to buy a share --> neighbor places bid (for two more than their evaluation) if they want to sell a share
-        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
-          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
-          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+        [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * price];present-value]
+          if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * price];present-value]
+          if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * price];present-value]
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
@@ -448,9 +450,9 @@ patches-own[ my-sentiment
           ]
          ] ; end of if in ifelse. next for agent-evaluation <= price
        [ask neighbors                      ; Agent wants to sell a share --> neighbor places bid (for two less than their evaluation) if they want to buy a share
-         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * present-value]
-           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * present-value]
-           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * present-value]
+         [ if pcolor = green [set neighbor-eval ((random-float 0.8) + 0.6) * price];present-value]
+           if pcolor = white [set neighbor-eval ((random-float 0.4) + 0.8) * price];present-value]
+           if pcolor = red [set neighbor-eval ((random-float 1.2) + 0.4) * price];present-value]
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
@@ -501,7 +503,6 @@ patches-own[ my-sentiment
    ;set return-numerator1 sum [my-convinction] of patches 
    ;set return-numerator2 sum [my-sentiment] of patches
    ;set return-numerator3 sum [my-decision] of patches
-   print (word "Risky-Risky Trades " risky-risky-trades)
    set return-numerator (risky-risky-trades + risky-typical-trades + risky-smart-trades + typical-typical-trades + typical-smart-trades + smart-smart-trades)
    ;; The return modifies the price of the share.
    ask patches
@@ -511,8 +512,12 @@ patches-own[ my-sentiment
    set old-price price
    set log-price log-price + return
    ;set price exp log-price
-   set price track-best-offer
-   set track-best-offer 5.0
+   ifelse track-best-offer = 0.0
+    [set price old-best-offer / return-denominator]
+    [set price track-best-offer / return-denominator
+     set old-best-offer track-best-offer
+     set track-best-offer 0.0]
+   print (word "Price " price)
    
    ask patches
    [ifelse time = 1
@@ -1087,7 +1092,7 @@ SWITCH
 144
 strong-change?
 strong-change?
-1
+0
 1
 -1000
 
