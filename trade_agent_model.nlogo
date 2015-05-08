@@ -254,11 +254,11 @@ patches-own[ my-sentiment
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
-              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
           ]
+        set track-best-offer track-best-offer + best-offer
         if best-offer < agent-evaluation
         [ set number-of-shares number-of-shares + 1
           set liquidity liquidity - best-offer
@@ -277,11 +277,11 @@ patches-own[ my-sentiment
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
-              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
           ]
+         set track-best-offer track-best-offer + best-offer
          if best-offer > agent-evaluation
          [ set number-of-shares number-of-shares - 1
           set liquidity liquidity + best-offer
@@ -366,11 +366,11 @@ patches-own[ my-sentiment
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
-              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
           ]
         ]
+        set track-best-offer track-best-offer + best-offer
         if best-offer < agent-evaluation
         [ set number-of-shares number-of-shares + 1
           set liquidity liquidity - best-offer
@@ -389,11 +389,11 @@ patches-own[ my-sentiment
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
-              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
           ]
+         set track-best-offer track-best-offer + best-offer
          if best-offer > agent-evaluation
          [ set number-of-shares number-of-shares - 1
           set liquidity liquidity + best-offer
@@ -431,11 +431,11 @@ patches-own[ my-sentiment
           [ if neighbor-eval + 2 < best-offer
             [ set best-offer neighbor-eval + 2
               ;set track-best-offer lput best-offer track-best-offer ;;;; sok 
-              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
           ]
+        set track-best-offer track-best-offer + best-offer
         if best-offer < agent-evaluation
         [ set number-of-shares number-of-shares + 1
           set liquidity liquidity - best-offer
@@ -454,11 +454,11 @@ patches-own[ my-sentiment
            if neighbor-eval > price    ; Looking only at buyers
            [ if neighbor-eval - 2 > best-offer
             [ set best-offer neighbor-eval - 2
-              set track-best-offer track-best-offer + best-offer
               set offer-x pxcor
               set offer-y pycor]
             ]
           ]
+         set track-best-offer track-best-offer + best-offer
          if best-offer > agent-evaluation
          [ set number-of-shares number-of-shares - 1
           set liquidity liquidity + best-offer
@@ -511,6 +511,7 @@ patches-own[ my-sentiment
    set log-price log-price + return
    ;set price exp log-price
    set price track-best-offer
+   ;set track-best-offer 0.0
    
    ask patches
    [ifelse time = 1
