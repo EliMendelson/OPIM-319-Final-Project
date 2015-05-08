@@ -501,6 +501,7 @@ patches-own[ my-sentiment
    ;set return-numerator1 sum [my-convinction] of patches 
    ;set return-numerator2 sum [my-sentiment] of patches
    ;set return-numerator3 sum [my-decision] of patches
+   print (word "Risky-Risky Trades " risky-risky-trades)
    set return-numerator (risky-risky-trades + risky-typical-trades + risky-smart-trades + typical-typical-trades + typical-smart-trades + smart-smart-trades)
    ;; The return modifies the price of the share.
    ask patches
@@ -511,12 +512,12 @@ patches-own[ my-sentiment
    set log-price log-price + return
    ;set price exp log-price
    set price track-best-offer
-   ;set track-best-offer 0.0
+   set track-best-offer 0.0
    
    ask patches
    [ifelse time = 1
    [set price-%variation 0]
-   [set price-%variation ln (price / old-price)]]
+   [set price-%variation 0]];ln (price / old-price)]]
    ask patches
    [if time = 1
    [set average-price price
