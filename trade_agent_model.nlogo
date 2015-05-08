@@ -258,13 +258,13 @@ patches-own[ my-sentiment
               set offer-y pycor]
             ]
           ]
-        set track-best-offer track-best-offer + best-offer
         if best-offer < agent-evaluation
         [ set number-of-shares number-of-shares + 1
           set liquidity liquidity - best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares - 1
             set liquidity liquidity + best-offer
+            set track-best-offer track-best-offer + best-offer
             if pcolor = green [set typical-typical-trades typical-typical-trades + 1]
             if pcolor = white [set typical-smart-trades typical-smart-trades + 1]
             if pcolor = red [set risky-typical-trades risky-typical-trades + 1]]
@@ -281,10 +281,10 @@ patches-own[ my-sentiment
               set offer-y pycor]
             ]
           ]
-         set track-best-offer track-best-offer + best-offer
          if best-offer > agent-evaluation
          [ set number-of-shares number-of-shares - 1
           set liquidity liquidity + best-offer
+          set track-best-offer track-best-offer + best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares + 1
             set liquidity liquidity - best-offer
@@ -370,10 +370,10 @@ patches-own[ my-sentiment
               set offer-y pycor]
           ]
         ]
-        set track-best-offer track-best-offer + best-offer
         if best-offer < agent-evaluation
         [ set number-of-shares number-of-shares + 1
           set liquidity liquidity - best-offer
+          set track-best-offer track-best-offer + best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares - 1
             set liquidity liquidity + best-offer
@@ -393,10 +393,10 @@ patches-own[ my-sentiment
               set offer-y pycor]
             ]
           ]
-         set track-best-offer track-best-offer + best-offer
          if best-offer > agent-evaluation
          [ set number-of-shares number-of-shares - 1
           set liquidity liquidity + best-offer
+          set track-best-offer track-best-offer + best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares + 1
             set liquidity liquidity - best-offer
@@ -435,10 +435,10 @@ patches-own[ my-sentiment
               set offer-y pycor]
             ]
           ]
-        set track-best-offer track-best-offer + best-offer
         if best-offer < agent-evaluation
         [ set number-of-shares number-of-shares + 1
           set liquidity liquidity - best-offer
+          set track-best-offer track-best-offer + best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares - 1
             set liquidity liquidity + best-offer
@@ -458,10 +458,10 @@ patches-own[ my-sentiment
               set offer-y pycor]
             ]
           ]
-         set track-best-offer track-best-offer + best-offer
          if best-offer > agent-evaluation
          [ set number-of-shares number-of-shares - 1
           set liquidity liquidity + best-offer
+          set track-best-offer track-best-offer + best-offer
           ask neighbors with [pxcor = offer-x and pycor = offer-y]
           [ set number-of-shares number-of-shares + 1
             set liquidity liquidity - best-offer
@@ -512,12 +512,12 @@ patches-own[ my-sentiment
    set log-price log-price + return
    ;set price exp log-price
    set price track-best-offer
-   set track-best-offer 0.0
+   set track-best-offer 5.0
    
    ask patches
    [ifelse time = 1
    [set price-%variation 0]
-   [set price-%variation 0]];ln (price / old-price)]]
+   [set price-%variation ln (price / old-price)]]
    ask patches
    [if time = 1
    [set average-price price
