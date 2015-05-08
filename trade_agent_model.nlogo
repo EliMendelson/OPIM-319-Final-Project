@@ -1,21 +1,4 @@
-patches-own[ my-sentiment 
-             ;; Each "imitator" can have a positive sentiment (+1), in which case he is 'bullish',
-             ;; that is he believes the market will rise, or he can have a 
-             ;; negative sentiment (-1) in which case he is 'bearish', that is he believes the market will fall.
-             ;; If the sentiment is positive the trader buys one share if it is negative he sells
-             ;; one share.
-             
-             my-convinction
-             ;; It's the equivalent of my-sentiment, but for the "fundamentalists"; it is based on rational criteria. As the name suggests, 
-             ;; it represents the conviction of losing or gaining money by holding the share and so it determines the buy or the sell of the share.          
-             
-             my-decision
-             ;; It's the same of the previous ones for "stubborns".
-             
-             my-total
-             ;; Represents the sum of sentiment, convinction and decision of neighbors, weighted by propensity to be influenced by them.
-                                        
-             number-of-shares 
+patches-own[ number-of-shares 
             ;; Number of shares that each trader has (if negative it implies that the
             ;; trader is 'short' (we assume that there are no limits to short selling).
             
@@ -29,23 +12,6 @@ patches-own[ my-sentiment
             ;; This variable represents each agent's portfolio, computed as 
             ;; actual stock price times the number of stock in portfolio, after every transaction.
              
-             opinion-vol 
-             ;; Volatility in a "imitator"'s own interpretation of the news.
-              
-             behavior-vol
-             ;; Probability that the "fundamentalists" will be influenced by the sentiments of the neighbours and will start to act as "imitators". 
-
-                          
-             propensity-to-sentiment-contagion
-             propensity-to-sentiment-contagion-base
-             ; Propensity to be influenced by neighbours' sentiments regarding the news qualitative nature.
-             
-             propensity-to-imitation
-             ;; propensity of "imitators" to copy the behaviour of the "fundamentalists".
-             
-             propensity-to-decision
-             ;; propensity of "imitators" to copy the behaviour of the "stubborns".
-             
              news-sensitivity 
              ;; Sensitivity that the traders have to the news qualitative meaning.
              
@@ -56,19 +22,11 @@ patches-own[ my-sentiment
              pessimists-counter
              ;; Allows the counting of the different type of traders.
              
-             ;;share-evaluation
-             ;; What the trader evaluates share value to be (depends on the type of trader)
-             
              random-number] 
              ;; It is a random number between 0 (included) and 1 (not included).
              
 
- globals [log-price
-          log-price-%variation
-          ;; The first is the current price, due to the sum of demand and supply; it moves according to the market returns. 
-          ;; The second is the variation of the price, as a percentage of the current price, determined by demand and supply.
-         
-         price
+ globals [price
          old-price
          price-%variation
          ;; The first is the price of the stock each time, calculated as exp (log-price), the second is the same variabile at time-1,
@@ -78,11 +36,6 @@ patches-own[ my-sentiment
          min-price
          max-price
          ;; They measure the average, the minimum and the maximum price of the stock.
-         
-         average-return
-         min-return
-         max-return
-         ;; They measure the average, the minimum and the maximum return of the stock.
          
          number-of-yellow
          ;; It counts the number of already failed agents.
@@ -104,12 +57,7 @@ patches-own[ my-sentiment
          present-value
          ;; It the value of the share and it is based on the news at disposal.   
          
-         return-numerator1
-         return-numerator2
-         return-numerator3
-         return-numerator
          return-denominator
-         return
          ;; The return of the market is calculated dividing the difference between buyers and sellers by the total amont of operators.       
          
          risky-risky-trades
@@ -131,9 +79,6 @@ patches-own[ my-sentiment
          number-of-optimists
          number-of-pessimists
          ;; They can change, because of the conversions.
-                          
-         indicator-volatility
-         ;; It is the variability of the market's quotations.
          ]
 
 ;---------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -157,8 +102,7 @@ patches-own[ my-sentiment
   [set pcolor red]]]]
     
   set present-value 8.0
-  set log-price 10.0
-  set price log-price
+  set price 10.0
   set track-best-offer 2.3
   set old-best-offer track-best-offer
   set return-denominator 1
@@ -169,17 +113,11 @@ patches-own[ my-sentiment
   ;; It shapes the "imitators"
   ask patches with [pcolor = green]
   [set number-of-shares 1 
-  set opinion-vol sigma + random-float 0.1
   set news-sensitivity (random-float max-news-sensitivity)
-  set propensity-to-sentiment-contagion-base (random-float max-propensity-to-sentiment-contagion-base)
-  set propensity-to-sentiment-contagion propensity-to-sentiment-contagion-base
-  set propensity-to-imitation random-float max-propensity-to-imitation
-  set propensity-to-decision random-float max-propensity-to-decision
   set typical-counter 1]    
   ;; It shapes the "fundamentalists"
   ask patches with [pcolor = white]
   [set number-of-shares 1 
-  set behavior-vol max-behavior-vol
   set smart-counter 1]
   ;; It shapes the "stubborns"
   ask patches with [pcolor = red]
@@ -200,9 +138,6 @@ patches-own[ my-sentiment
   balance-and-liquidity-adjustment
   market-clearing  
   fail-or-survive
-  update-market-sentiment
-  ;modify-categories
-  compute-indicator-volatility
   do-plot
  end
  
@@ -298,54 +233,6 @@ patches-own[ my-sentiment
          ]
        update-price
        ]
-  ;ask patches
-  ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-  ;[ifelse all-or-just-neighbors?
-  ;[set my-total (propensity-to-sentiment-contagion * sum [my-sentiment] of patches +
-  ;propensity-to-imitation * sum [my-convinction] of patches + propensity-to-decision * sum [my-decision] of patches +
-  ;news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol)]
-  ;[set my-total (sum [ propensity-to-sentiment-contagion * my-sentiment +
-  ;propensity-to-imitation * my-convinction + propensity-to-decision * my-decision +
-  ;news-sensitivity * (news-qualitative-meaning) + random-normal epsilon opinion-vol ] of neighbors ) ]]]
-  ;ask patches
-  ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-  ;  [ifelse (my-total > 1)
-  ;    [set my-sentiment 1
-  ;    set number-of-shares number-of-shares + 1
-  ;    set optimists-counter 1
-  ;    set pessimists-counter 0]
-  ;      [ifelse (my-total > 0)
-  ;        [ifelse strong-change?
-  ;        [set my-sentiment -1
-  ;        set number-of-shares number-of-shares - 1
-  ;        set pessimists-counter 1
-  ;        set optimists-counter 0]
-  ;        [set my-sentiment 1
-  ;        set number-of-shares number-of-shares + 1
-  ;        set pessimists-counter 0
-  ;        set optimists-counter 1]]
-  ;          [ifelse (my-total = 0)
-  ;            [ifelse weak-change?
-  ;            [set my-sentiment 1
-  ;            set number-of-shares number-of-shares + 1
-  ;            set pessimists-counter 0
-  ;            set optimists-counter 1]   
-  ;            [set my-sentiment -1
-  ;            set number-of-shares number-of-shares - 1
-  ;            set pessimists-counter 1
-  ;            set optimists-counter 0]]
-  ;    [set my-sentiment -1
-  ;    set number-of-shares number-of-shares - 1
-  ;    set pessimists-counter 1
-  ;    set optimists-counter 0]]]]]
-  
-  ;; separate pessimists from optimists:
-  ;ask patches
-  ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-  ;[if my-sentiment = 1
-  ;[set pcolor blue + 3]
-  ;if my-sentiment = -1
-  ;[set pcolor black]]]
   end
  
  
@@ -435,7 +322,6 @@ patches-own[ my-sentiment
           if neighbor-eval < price    ; Looking only at sellers
           [ if neighbor-eval < best-offer
             [ set best-offer neighbor-eval
-              ;set track-best-offer lput best-offer track-best-offer ;;;; sok 
               set offer-x pxcor
               set offer-y pycor]
             ]
@@ -474,10 +360,9 @@ patches-own[ my-sentiment
             if pcolor = white [set risky-smart-trades typical-smart-trades + 1]
             if pcolor = red [set risky-risky-trades risky-typical-trades + 1]]
           ]
-         ] ; end of else in ifelse, [ask neighbors ....
+         ]
        ]
     update-price
-    ;print (word "Risky-decision " track-best-offer)
    end
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -506,8 +391,6 @@ patches-own[ my-sentiment
     [ ifelse return-denominator = 0
       [set price old-best-offer]
       [set price track-best-offer / return-denominator]]
-   ;print (word "combined trade value: " track-best-offer)
-   ;print (word "number of trades: " return-denominator)
  end
 
 
@@ -518,23 +401,10 @@ patches-own[ my-sentiment
  ;
  
    to market-clearing 
-   ;; The denominator is the number of agents.
-   ;set return-denominator count patches with [pcolor != yellow]
-   ;; The numerator is the difference between sellers and buyers.
-   ;set return-numerator1 sum [my-convinction] of patches 
-   ;set return-numerator2 sum [my-sentiment] of patches
-   ;set return-numerator3 sum [my-decision] of patches
+   ;; The denominator is the number of trades.
+   ;; The numerator is the total value of assets traded in all trades.
    set return-denominator (risky-risky-trades + risky-typical-trades + risky-smart-trades + typical-typical-trades + typical-smart-trades + smart-smart-trades)
-   ;; The return modifies the price of the share.
-   ask patches
-   [ifelse return-denominator = 0
-   [set return 0] 
-   [set return return-numerator / return-denominator]]
    set old-price price
-   set log-price log-price + return
-   ;set price exp log-price
-   ;print (word "Trade value " track-best-offer)
-   ;print (word "Number of transactions " return-denominator)
    ifelse (track-best-offer = 0.0)
     [set price old-best-offer]
     [ ifelse return-denominator = 0
@@ -551,12 +421,8 @@ patches-own[ my-sentiment
    [if time = 1
    [set average-price price
     set min-price price
-    set max-price price
-    set average-return return
-    set min-return return
-    set max-return return]]
+    set max-price price]]
    set average-price average-price * (time - 1) / time + price / time
-   set average-return average-return * (time - 1) / time + return / time
    ask patches
    [ifelse (price - min-price) > 0
    [set min-price min-price]
@@ -564,15 +430,7 @@ patches-own[ my-sentiment
    ask patches
    [ifelse (max-price - price) > 0
    [set max-price max-price]
-   [set max-price price]] 
-   ask patches
-   [ifelse (return - min-return) > 0
-   [set min-return min-return]
-   [set min-return return]] 
-   ask patches
-   [ifelse (max-return - return) > 0
-   [set max-return max-return]
-   [set max-return return]]       
+   [set max-price price]]        
  end
  
  
@@ -584,10 +442,7 @@ patches-own[ my-sentiment
  ask patches with [pcolor != yellow]
  [ifelse (liquidity + portfolio-value) < maximum-debt
  [set pcolor yellow
-  set number-of-shares 0
-  set my-convinction 0
-  set my-decision 0
-  set my-sentiment 0]
+  set number-of-shares 0]
  [ifelse liquidity < maximum-debt and (liquidity + portfolio-value) >= maximum-debt
  [while [liquidity < maximum-debt and (liquidity + portfolio-value) >= maximum-debt]
  [set number-of-shares (number-of-shares - 1)
@@ -601,10 +456,7 @@ patches-own[ my-sentiment
   ask patches with [pcolor != yellow]
  [if (liquidity + portfolio-value) < maximum-debt
  [set pcolor yellow
-  set number-of-shares 0
-  set my-convinction 0
-  set my-decision 0
-  set my-sentiment 0]]
+  set number-of-shares 0]]
 
  set number-of-yellow count patches with [pcolor = yellow]
  
@@ -619,88 +471,6 @@ patches-own[ my-sentiment
  set max-liquidity max [liquidity] of patches
  end
 
- 
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;
- ; Update market sentiment ;
- ;;;;;;;;;;;;;;;;;;;;;;;;;;;
- ;; If a good news is followed by an increase of the price, the confidence of the "imitators" in other people's sentiments increases.
-
- to update-market-sentiment
-  ask patches 
-  [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
-  [if (return > 0) and (news-qualitative-meaning > 0)
-  [set propensity-to-sentiment-contagion  propensity-to-sentiment-contagion-base + return]
-  if (return > 0) and (news-qualitative-meaning < 0)
-  [set propensity-to-sentiment-contagion  propensity-to-sentiment-contagion-base - return]
-  if (return < 0) and (news-qualitative-meaning < 0)
-  [set propensity-to-sentiment-contagion  propensity-to-sentiment-contagion-base - return] 
-  if (return < 0) and (news-qualitative-meaning > 0)
-  [set propensity-to-sentiment-contagion  propensity-to-sentiment-contagion-base + return]]]    
- end
-    
-   
- ;;;;;;;;;;;;;;;;;;;;;;;;
- ; Change agents' type  ;
- ;;;;;;;;;;;;;;;;;;;;;;;;
- ;; If many colleagues are optimist or pessimist, the "fundamentalist" can change their type and become "imitators" 
- ;; Randomly the "imitators" become "fundamentalist".
- 
- ;to modify-categories
-  ;; It trasforms some "imitators" in "fundamentalist". 
- ; ask patches 
- ;   [if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
- ; [if (random-float 3000) < new-fundamentalists
- ; [set pcolor white
- ; set behavior-vol max-behavior-vol
- ; set smart-counter 1]]]
- ; ;; Here the opposite happens
- ; ask patches with [pcolor = white]
- ; [set number-of-optimists sum [optimists-counter] of neighbors
- ; set number-of-pessimists sum [pessimists-counter] of neighbors]
- ; ask patches with [pcolor = white]
- ; [if (number-of-pessimists) > behavior-vol
- ; [change-type1]]
- ; ask patches with [pcolor = white]
- ; [if (number-of-optimists) > behavior-vol
- ; [change-type2]]
- ;end
-   
- ;   to change-type1 ;; The "fundamentalist" become pessimistic.
- ;   ask patches with [pcolor = white]
- ;   [if (random-float 100) < change-probability
- ;   [set pcolor black]]
- ;   set opinion-vol (sigma + random-float 0.1)
- ;   set news-sensitivity (random-float max-news-sensitivity)
- ;   set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
- ;   set typical-counter 1
- ;   set pessimists-counter 1
- ;   set smart-counter 0
- ;  end
- ;  to change-type2 ;; The "fundamentalist" become optimistic.
- ;   ask patches with [pcolor = white]
- ;   [if (random-float 100) < change-probability
- ;   [set pcolor blue + 3]]
- ;   set opinion-vol (sigma + random-float 0.1)
- ;   set news-sensitivity (random-float max-news-sensitivity)
- ;   set propensity-to-sentiment-contagion (random-float max-propensity-to-sentiment-contagion-base)
- ;   set typical-counter 1
- ;   set optimists-counter 1
- ;   set smart-counter 0
- ;  end
-
- 
- ;;;;;;;;;;;;;;;;;;;;;;;;
- ; Deviations to EMH    ;
- ;;;;;;;;;;;;;;;;;;;;;;;;
- ;; The volatility of the share market refers to the absolute value of the return.  
- 
-
- to compute-indicator-volatility
-  set indicator-volatility abs(return)
- end
-
-
-
  ;;;;;;;;;;;;;;;;;;;;;;;;;;
  ; Plot Graphics          ;
  ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -711,12 +481,6 @@ patches-own[ my-sentiment
   set-current-plot "Price"
   set-current-plot-pen "price"
   plot price
-  set-current-plot "Return"
-  set-current-plot-pen "return"
-  plot return
-  set-current-plot "Volatility"
-  set-current-plot-pen "indicator-volatility"
-  plot indicator-volatility
   set-current-plot "Price-%variation"
   set-current-plot-pen "Price-%variation"
   plot price-%variation
@@ -862,17 +626,6 @@ MONITOR
 NIL
 news-qualitative-meaning
 0
-1
-11
-
-MONITOR
-197
-230
-262
-275
-NIL
-return
-2
 1
 11
 
@@ -1049,24 +802,6 @@ PENS
 
 PLOT
 372
-485
-741
-635
-VOLATILITY
-time
-indicator-volatility
-0.0
-100.0
-0.0
-1.5
-true
-false
-"" ""
-PENS
-"indicator-volatility" 1.0 0 -8630108 true "" ""
-
-PLOT
-372
 335
 741
 485
@@ -1132,23 +867,12 @@ all-or-just-neighbors?
 -1000
 
 MONITOR
-743
-590
-838
-635
+372
+724
+467
+769
 NIL
 average-price\n
-3
-1
-11
-
-MONITOR
-837
-590
-934
-635
-NIL
-average-return
 3
 1
 11
@@ -1165,10 +889,10 @@ time
 11
 
 MONITOR
-742
-494
-839
-539
+372
+634
+469
+679
 NIL
 min-price
 3
@@ -1176,34 +900,12 @@ min-price
 11
 
 MONITOR
-744
-543
-839
-588
+372
+679
+467
+724
 NIL
 max-price
-3
-1
-11
-
-MONITOR
-846
-494
-943
-539
-NIL
-min-return
-3
-1
-11
-
-MONITOR
-846
-544
-944
-589
-NIL
-max-return
 3
 1
 11
@@ -1232,22 +934,11 @@ maximum-debt
 maximum-debt
 -1000000
 0
-0
+-660
 10
 1
 NIL
 HORIZONTAL
-
-MONITOR
-478
-282
-540
-327
-NIL
-log-price
-6
-1
-11
 
 MONITOR
 549
@@ -1261,10 +952,10 @@ number-of-yellow
 11
 
 MONITOR
-401
-694
-521
-739
+571
+529
+691
+574
 NIL
 max-portfolio-value
 3
@@ -1272,10 +963,10 @@ max-portfolio-value
 11
 
 MONITOR
-401
-748
-544
-793
+571
+574
+714
+619
 NIL
 average-portfolio-value
 3
@@ -1283,10 +974,10 @@ average-portfolio-value
 11
 
 MONITOR
-402
-641
-518
-686
+571
+485
+687
+530
 NIL
 min-portfolio-value\n
 3
@@ -1314,10 +1005,10 @@ PENS
 "max-portfolio-value" 1.0 0 -11221820 true "" ""
 
 PLOT
-558
-647
-758
-797
+372
+485
+572
+635
 Min, Average and Max Liquidity
 time
 NIL
@@ -1334,10 +1025,10 @@ PENS
 "max-liquidity" 1.0 0 -11221820 true "" ""
 
 MONITOR
-779
-646
-856
-691
+469
+634
+546
+679
 NIL
 min-liquidity
 6
@@ -1345,10 +1036,10 @@ min-liquidity
 11
 
 MONITOR
-782
-701
-863
-746
+467
+679
+548
+724
 NIL
 max-liquidity
 6
@@ -1356,10 +1047,10 @@ max-liquidity
 11
 
 MONITOR
-788
-757
-892
-802
+467
+724
+571
+769
 NIL
 average-liquidity
 6
