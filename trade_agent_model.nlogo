@@ -157,6 +157,8 @@ patches-own[ my-sentiment
     
   set present-value 7
   set log-price 2.3
+  set price log-price
+  set track-best-offer 5.0
   set time 0
   ask patches
   [set liquidity endowment]
@@ -215,7 +217,6 @@ patches-own[ my-sentiment
  set typical-typical-trades 0
  set typical-smart-trades 0
  set smart-smart-trades 0
- set track-best-offer 0.0
  end 
 
  ;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -505,10 +506,11 @@ patches-own[ my-sentiment
    ask patches
    [ifelse return-denominator = 0
    [set return 0] 
-   [set return track-best-offer / return-denominator]]
+   [set return return-numerator / return-denominator]]
    set old-price price
    set log-price log-price + return
-   set price exp log-price
+   ;set price exp log-price
+   set price track-best-offer
    
    ask patches
    [ifelse time = 1
