@@ -503,7 +503,9 @@ patches-own[ my-sentiment
    set return-denominator (risky-risky-trades + risky-typical-trades + risky-smart-trades + typical-typical-trades + typical-smart-trades + smart-smart-trades)
    ifelse track-best-offer = 0.0
     [set price old-best-offer]
-    [set price track-best-offer / return-denominator]
+    [ ifelse return-denominator = 0
+      [set price old-best-offer]
+      [set price track-best-offer / return-denominator]]
    ;print (word "combined trade value: " track-best-offer)
    ;print (word "number of trades: " return-denominator)
  end
@@ -533,11 +535,13 @@ patches-own[ my-sentiment
    ;set price exp log-price
    ;print (word "Trade value " track-best-offer)
    ;print (word "Number of transactions " return-denominator)
-   ifelse track-best-offer = 0.0
+   ifelse (track-best-offer = 0.0)
     [set price old-best-offer]
-    [set price track-best-offer / return-denominator
-     set old-best-offer track-best-offer / return-denominator
-     set track-best-offer 0.0]
+    [ ifelse return-denominator = 0
+      [set price old-best-offer]
+      [set price track-best-offer / return-denominator
+      set old-best-offer track-best-offer / return-denominator
+      set track-best-offer 0.0]]
    
    ask patches
    [ifelse time = 1
@@ -881,7 +885,7 @@ smart
 smart
 0
 100
-74
+33
 1
 1
 NIL
@@ -1088,7 +1092,7 @@ typical
 typical
 0
 100
-25
+61
 1
 1
 NIL
