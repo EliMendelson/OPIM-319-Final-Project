@@ -156,7 +156,7 @@ patches-own[ my-sentiment
   [set pcolor green]
   [set pcolor red]]]]
     
-  set present-value 10.0
+  set present-value 8.0
   set log-price 10.0
   set price log-price
   set track-best-offer 2.3
@@ -296,6 +296,7 @@ patches-own[ my-sentiment
             if pcolor = red [set risky-typical-trades risky-typical-trades + 1]]
           ]
          ]
+       update-price
        ]
   ;ask patches
   ;[if (pcolor != red) and (pcolor != white) and (pcolor != yellow)
@@ -408,6 +409,7 @@ patches-own[ my-sentiment
             if pcolor = red [set risky-smart-trades risky-typical-trades + 1]]
           ]
          ]
+       update-price
        ]
  end 
  
@@ -474,6 +476,7 @@ patches-own[ my-sentiment
           ]
          ] ; end of else in ifelse, [ask neighbors ....
        ]
+    update-price
     ;print (word "Risky-decision " track-best-offer)
    end
 
@@ -488,6 +491,21 @@ patches-own[ my-sentiment
  ifelse number-of-shares > old-number-of-shares
  [set liquidity liquidity - price]
  [set liquidity liquidity + price]]
+ end
+
+
+ ;;;;;;;;;;;;;;;;
+ ; Update Price ;
+ ;;;;;;;;;;;;;;;;
+ ;; We update the price before each agent's decision to trade
+ 
+ to update-price
+   set return-denominator (risky-risky-trades + risky-typical-trades + risky-smart-trades + typical-typical-trades + typical-smart-trades + smart-smart-trades)
+   ifelse track-best-offer = 0.0
+    [set price old-best-offer]
+    [set price track-best-offer / return-denominator]
+   ;print (word "combined trade value: " track-best-offer)
+   ;print (word "number of trades: " return-denominator)
  end
 
 
@@ -513,12 +531,13 @@ patches-own[ my-sentiment
    set old-price price
    set log-price log-price + return
    ;set price exp log-price
+   ;print (word "Trade value " track-best-offer)
+   ;print (word "Number of transactions " return-denominator)
    ifelse track-best-offer = 0.0
     [set price old-best-offer]
     [set price track-best-offer / return-denominator
      set old-best-offer track-best-offer / return-denominator
      set track-best-offer 0.0]
-   print (word "Price " price)
    
    ask patches
    [ifelse time = 1
@@ -862,7 +881,7 @@ smart
 smart
 0
 100
-33
+74
 1
 1
 NIL
@@ -1069,7 +1088,7 @@ typical
 typical
 0
 100
-33
+25
 1
 1
 NIL
@@ -1193,8 +1212,8 @@ SLIDER
 endowment
 endowment
 0
-1000000
-0
+50000
+610
 10
 1
 NIL
