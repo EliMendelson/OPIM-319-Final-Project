@@ -641,7 +641,7 @@ smart
 smart
 0
 100
-95
+5
 1
 1
 NIL
@@ -689,7 +689,7 @@ typical
 typical
 0
 100
-5
+90
 1
 1
 NIL
@@ -748,7 +748,7 @@ endowment
 endowment
 0
 5000
-3990
+4010
 10
 1
 NIL
