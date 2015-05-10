@@ -39,6 +39,9 @@ patches-own[ number-of-shares
          
          number-of-yellow
          ;; It counts the number of already failed agents.
+         number-of-red
+         number-of-green
+         number-of-white
       
   
          average-liquidity
@@ -101,8 +104,8 @@ patches-own[ number-of-shares
   [set pcolor green]
   [set pcolor red]]]]
     
-  set present-value 8.0
-  set price 10.0
+  set present-value 1000.0
+  set price 1000.0
   set track-best-offer 2.3
   set old-best-offer track-best-offer
   set return-denominator 1
@@ -165,9 +168,9 @@ patches-own[ number-of-shares
  to news-arrival
   ifelse (random-float 1) >= .5
   [set news-qualitative-meaning 1
-  set present-value present-value + random-float 1.00]
+  set present-value price + random-float 1.00]
   [set news-qualitative-meaning -1
-  set present-value present-value - random-float 1.00]
+  set present-value price - random-float 1.00]
  end
 
 
@@ -181,7 +184,7 @@ patches-own[ number-of-shares
     ask patches with [pcolor = green]
     [ let agent-evaluation ((random-float 0.8) + 0.6) * present-value       ; agent's evaluation of a share
       let best-offer agent-evaluation
-      let offer-x 0    ; offer-x is the best offer's x-coordinate
+      let offer-x 0    ; offer-x is the best offer's x-coordinate  
       let offer-y 0    ; offer-y is the best offer's y-coordinate
       let neighbor-eval agent-evaluation
       ifelse (agent-evaluation > price)
@@ -459,6 +462,9 @@ patches-own[ number-of-shares
   set number-of-shares 0]]
 
  set number-of-yellow count patches with [pcolor = yellow]
+ set number-of-red count patches with [pcolor = red]
+ set number-of-green count patches with [pcolor = green]
+ set number-of-white count patches with [pcolor = white]
  
  set average-portfolio-value (sum [portfolio-value] of patches) / (count patches with [pcolor != yellow] + .0000000000000000001)
  ;; We need to do that because, if every agent has failed, the program returns a division-by-zero error.   
@@ -481,9 +487,6 @@ patches-own[ number-of-shares
   set-current-plot "Price"
   set-current-plot-pen "price"
   plot price
-  set-current-plot "Price-%variation"
-  set-current-plot-pen "Price-%variation"
-  plot price-%variation
   set-current-plot "Min, Average and Max Portfolio Value"
   set-current-plot-pen "Min-portfolio-value" 
   plot min-portfolio-value
@@ -546,10 +549,10 @@ ticks
 30.0
 
 BUTTON
-248
-45
-308
-78
+249
+11
+309
+44
 GO
 go
 T
@@ -563,10 +566,10 @@ NIL
 1
 
 BUTTON
-190
-45
-250
-78
+191
+11
+251
+44
 SETUP
 setup
 NIL
@@ -580,10 +583,10 @@ NIL
 1
 
 BUTTON
-308
-44
-380
-77
+309
+10
+381
+43
 STEP ONCE
 go
 NIL
@@ -597,32 +600,32 @@ NIL
 1
 
 MONITOR
-197
-181
-262
-226
+220
+57
+379
+102
 NIL
 price
-6
+4
 1
 11
 
 MONITOR
-262
-181
-371
-226
+220
+102
+379
+147
 NIL
 present-value
-2
+4
 1
 11
 
 MONITOR
-262
-230
-371
-275
+221
+145
+330
+190
 NIL
 news-qualitative-meaning
 0
@@ -630,145 +633,40 @@ news-qualitative-meaning
 11
 
 SLIDER
-7
-174
-185
-207
+2
+51
+180
+84
 smart
 smart
 0
 100
-33
+95
 1
 1
 NIL
 HORIZONTAL
 
 SLIDER
-284
+2
 10
-376
+180
 43
-sigma
-sigma
+max-news-sensitivity
+max-news-sensitivity
+0
+1
 0.5
-1
-0.9
-0.0010
-1
-NIL
-HORIZONTAL
-
-SLIDER
-2
-10
-180
-43
-max-news-sensitivity
-max-news-sensitivity
-0
-1
-0.67
 0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-2
-75
-180
-108
-max-propensity-to-sentiment-contagion-base
-max-propensity-to-sentiment-contagion-base
-0
-1
-0.78
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-2
-42
-180
-75
-max-propensity-to-imitation
-max-propensity-to-imitation
-0
-1
-0.64
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-8
-239
-186
-272
-max-behavior-vol
-max-behavior-vol
-0
-8
-4
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-192
-10
-284
-43
-epsilon
-epsilon
--1
-1
-0.04
-0.01
-1
-NIL
-HORIZONTAL
-
-SLIDER
-7
-141
-185
-174
-new-fundamentalists
-new-fundamentalists
-0
-10
-3
-1
-1
-NIL
-HORIZONTAL
-
-SLIDER
-8
-271
-186
-304
-change-probability
-change-probability
-0
-100
-50
-1
 1
 NIL
 HORIZONTAL
 
 PLOT
 5
-336
+362
 373
-486
+512
 PRICE
 time
 price
@@ -782,95 +680,26 @@ false
 PENS
 "price" 1.0 0 -13345367 true "" ""
 
-PLOT
-4
-485
-372
-635
-RETURN
-time
-return
-0.0
-100.0
--0.1
-0.1
-true
-false
-"" ""
-PENS
-"return" 1.0 0 -955883 true "" ""
-
-PLOT
-372
-335
-741
-485
-PRICE-%VARIATION
-time
-price-%variation
-0.0
-10.0
-0.0
-1.0
-true
-false
-"" ""
-PENS
-"price-%variation" 1.0 0 -5825686 true "" ""
-
 SLIDER
-7
-207
-186
-240
+2
+84
+181
+117
 typical
 typical
 0
 100
-61
+5
 1
 1
 NIL
 HORIZONTAL
 
-SWITCH
-194
-143
-378
-176
-weak-change?
-weak-change?
-1
-1
--1000
-
-SWITCH
-194
-111
-378
-144
-strong-change?
-strong-change?
-0
-1
--1000
-
-SWITCH
-193
-79
-378
-112
-all-or-just-neighbors?
-all-or-just-neighbors?
-1
-1
--1000
-
 MONITOR
-372
-724
-467
-769
+373
+424
+530
+469
 NIL
 average-price\n
 3
@@ -878,10 +707,10 @@ average-price\n
 11
 
 MONITOR
-406
-281
-463
-326
+386
+284
+443
+329
 NIL
 time
 3
@@ -889,10 +718,10 @@ time
 11
 
 MONITOR
-372
-634
-469
-679
+373
+468
+529
+513
 NIL
 min-price
 3
@@ -900,10 +729,10 @@ min-price
 11
 
 MONITOR
-372
-679
-467
-724
+373
+381
+529
+426
 NIL
 max-price
 3
@@ -911,40 +740,40 @@ max-price
 11
 
 SLIDER
-8
-303
-186
-336
+3
+117
+181
+150
 endowment
 endowment
 0
-50000
-610
+5000
+3990
 10
 1
 NIL
 HORIZONTAL
 
 SLIDER
-192
-284
-379
-317
+3
+150
+190
+183
 maximum-debt
 maximum-debt
 -1000000
 0
--660
+0
 10
 1
 NIL
 HORIZONTAL
 
 MONITOR
-549
-282
-606
-327
+454
+285
+511
+330
 failed
 number-of-yellow
 3
@@ -952,10 +781,10 @@ number-of-yellow
 11
 
 MONITOR
-571
-529
-691
-574
+375
+543
+536
+588
 NIL
 max-portfolio-value
 3
@@ -963,10 +792,10 @@ max-portfolio-value
 11
 
 MONITOR
-571
-574
-714
-619
+375
+586
+536
+631
 NIL
 average-portfolio-value
 3
@@ -974,10 +803,10 @@ average-portfolio-value
 11
 
 MONITOR
-571
-485
-687
-530
+375
+630
+536
+675
 NIL
 min-portfolio-value\n
 3
@@ -985,10 +814,10 @@ min-portfolio-value\n
 11
 
 PLOT
-3
-635
-372
-808
+5
+515
+374
+688
 Min, Average and Max Portfolio Value
 time
 NIL
@@ -1005,10 +834,10 @@ PENS
 "max-portfolio-value" 1.0 0 -11221820 true "" ""
 
 PLOT
-372
-485
-572
-635
+537
+537
+1010
+687
 Min, Average and Max Liquidity
 time
 NIL
@@ -1025,10 +854,10 @@ PENS
 "max-liquidity" 1.0 0 -11221820 true "" ""
 
 MONITOR
-469
-634
-546
-679
+1008
+547
+1168
+592
 NIL
 min-liquidity
 6
@@ -1036,10 +865,10 @@ min-liquidity
 11
 
 MONITOR
-467
-679
-548
-724
+1008
+592
+1159
+637
 NIL
 max-liquidity
 6
@@ -1047,30 +876,15 @@ max-liquidity
 11
 
 MONITOR
-467
-724
-571
-769
+1008
+637
+1164
+682
 NIL
 average-liquidity
 6
 1
 11
-
-SLIDER
-4
-108
-183
-141
-max-propensity-to-decision
-max-propensity-to-decision
-0
-1
-0.67
-0.01
-1
-NIL
-HORIZONTAL
 
 PLOT
 757
@@ -1179,6 +993,39 @@ false
 "" ""
 PENS
 "smart-smart-trades" 1.0 0 -16777216 true "" ""
+
+MONITOR
+523
+285
+580
+330
+Smarts
+number-of-white
+0
+1
+11
+
+MONITOR
+587
+285
+651
+330
+Typicals
+number-of-green
+0
+1
+11
+
+MONITOR
+658
+286
+715
+331
+Riskys
+number-of-red
+0
+1
+11
 
 @#$#@#$#@
 ## WHAT IS IT?
